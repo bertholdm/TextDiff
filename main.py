@@ -44,6 +44,12 @@ class TextDiffDialog(QDialog):
         self.file_2_combo.setObjectName("file_2_combo")
         # self.cb.currentIndexChanged.connect(self.selectionchange)
 
+        self.compare_output_label = QLabel(_('Compare output format'))
+        self.compare_output_combo = QComboBox()
+        self.compare_output_combo.setObjectName("compare_output_combo")
+        output_formats = ['HTML', 'Unified']
+        self.compare_output_combo.addItems(x for x in output_formats)
+
         self.cancel_button = QPushButton(_('Cancel'), self)
         self.cancel_button.clicked.connect(self.close_dialog)
         self.compare_button = QPushButton(_('Compare'), self)
@@ -66,12 +72,15 @@ class TextDiffDialog(QDialog):
         self.grid_layout.addWidget(self.file_1_combo, 2, 0, 1, 1)
         self.grid_layout.addWidget(self.file_2_combo, 2, 1, 1, 1)
         # row 3
-        self.grid_layout.addWidget(self.cancel_button, 3, 0, 1, 1)
-        self.grid_layout.addWidget(self.compare_button, 3, 1, 1, 1)
+        self.grid_layout.addWidget(self.compare_output_label, 3, 0, 1, 1)
+        self.grid_layout.addWidget(self.compare_output_combo, 3, 1, 1, 1)
         # row 4
-        self.grid_layout.addWidget(self.result_text, 4, 0, 1, 2)
+        self.grid_layout.addWidget(self.cancel_button, 4, 0, 1, 1)
+        self.grid_layout.addWidget(self.compare_button, 4, 1, 1, 1)
         # row 5
-        self.grid_layout.addWidget(self.copy_button, 5, 0, 1, 2)
+        self.grid_layout.addWidget(self.result_text, 5, 0, 1, 2)
+        # row 6
+        self.grid_layout.addWidget(self.copy_button, 6, 0, 1, 2)
 
         self.setLayout(self.grid_layout)
 
@@ -291,7 +300,8 @@ class TextDiffDialog(QDialog):
         # print(paths_for_formats_dict)
 
         text_formats = []
-        convert_options = ' -v -v –enable-heuristics '
+        # convert_options = ' -v -v –enable-heuristics '
+        convert_options = ' -v -v '
         for filtered_path in filtered_paths:
 
             # ToDo: Convert format only when not TXT format
@@ -308,6 +318,16 @@ class TextDiffDialog(QDialog):
                       convert_options)
 
             # ToDo: Erzeugte TXT Datei in Calibre bekanntmachen
+            # fpath = Path(' "' + filtered_path[2] + '.txt' + '"')
+            fpath = Path(filtered_path[2] + '.txt')
+            fmtf = fpath.name
+            print('fmtf=' + fmtf)
+            if os.path.getsize(fpath) < 1:
+                raise Exception(_('Empty output file, probably the conversion process crashed'))
+            with open(fpath, 'rb') as data:
+                db.add_format(filtered_path[0], 'TXT', data, index_is_id=True)
+            # self.gui.book_converted.emit(book_id, fmt)
+            # self.gui.status_bar.show_message(job.description + ' ' + _('Convesion completed'), 2000)
 
         print('text_formats=')
         print(text_formats)
@@ -315,14 +335,59 @@ class TextDiffDialog(QDialog):
         second_file = Path(text_formats[1])  # Path('friends_shopping_list.txt')
         diff_file = Path(os.path.dirname(os.path.abspath(first_file)) + '\\diff_file.html')  # Path('diff_shopping_list.html')
 
-        self.create_diff(first_file, second_file, diff_file)
-
-        with open(diff_file) as f:
-            self.result_text.setHtml(f.read())
-
         # ToDo: Fenster in den Vordergrund bringen
 
         # ToDo: Warum ist das linke Teil-Fenster schmaler?
+
+        print('Beginning compare...')
+
+        # self.create_diff(first_file, second_file, diff_file)
+
+        # https://docs.python.org/3/library/difflib.html
+
+        print('first_file=' + first_file.name)
+        print('second_file=' + second_file.name)
+        file_1 = open(first_file).readlines()
+        file_2 = open(second_file).readlines()
+
+        # ToDo: Options for select Diff Mode (unified_diff, HTMLDiff, ...)
+        # If diff_mode == 'HTMLDiff':
+        # If diff_mode == 'unified_diff':
+
+        if str(self.compare_output_combo.currentText()).upper() == 'HTML':
+
+            # delta = difflib.HtmlDiff().make_file(file_1, file_2, first_file.name, second_file.name)
+            # difflöib.HmlDiff.__init__()
+
+            # d = difflib.HtmlDiff()#wrapcolumn=10)
+            # html = d.make_file(lines1, lines2)
+            delta = difflib.HtmlDiff().make_table(file_1, file_2, first_file.name, second_file.name)
+            print('delta=' + delta[:100])
+
+            # ToDo: ggf. make_table verwenden:
+            # make_table(fromlines, tolines, fromdesc='', todesc='', context=False, numlines=5)
+            # Compares fromlines and tolines (lists of strings) and returns a string which is a complete HTML table showing line by line differences with inter-line and intra-line changes highlighted.
+            # The arguments for this method are the same as those for the make_file() method
+
+            # ToDo: Fortschrittsanzeige
+
+            # with open(diff_file, "w") as f:
+            #     f.write(delta)
+            #     # Show Diff in GUI
+            #     with open(diff_file) as f:
+            #         self.result_text.setHtml(f.read())
+            # Show Diff in GUI
+
+            # ToDo: Direkt speichern geht nicht. delta ist ein generator!!!!!!!!!!!
+
+            self.result_text.setHtml((delta))
+        elif str(self.compare_output_combo.currentText()).upper() == 'UNIFIED':
+            delta = difflib.unified_diff(file_1, file_2, first_file.name, second_file.name)
+            print('delta=' + delta[:100])
+            # Show Diff in GUI
+            self.result_text.setHtml((delta))
+        else:
+            pass
 
         return
 
