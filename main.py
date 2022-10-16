@@ -161,12 +161,31 @@ class TextDiffDialog(QDialog):
         pass
 
     def create_diff(self, first_file: Path, second_file: Path, diff_file: Path = None):
-        print('first_file=' + first_file)
-        print('second_file=' + second_file)
+
+        # https://docs.python.org/3/library/difflib.html
+
+        print('first_file=' + first_file.name)
+        print('second_file=' + second_file.name)
         file_1 = open(first_file).readlines()
         file_2 = open(second_file).readlines()
+
+        # ToDo: Options for select Diff Mode (unified_diff, HTMLDiff, ...)
+        # If diff_mode == 'HTMLDiff':
+        # If diff_mode == 'unified_diff':
+
+        print('Beginning compare...')
+
         if diff_file:
+
             delta = difflib.HtmlDiff().make_file(file_1, file_2, first_file.name, second_file.name)
+
+            # ToDo: ggf. make_table verwenden:
+            # make_table(fromlines, tolines, fromdesc='', todesc='', context=False, numlines=5)
+            # Compares fromlines and tolines (lists of strings) and returns a string which is a complete HTML table showing line by line differences with inter-line and intra-line changes highlighted.
+            # The arguments for this method are the same as those for the make_file() method
+
+            # ToDo: Fortschrittsanzeige
+
             with open(diff_file, "w") as f:
                 f.write(delta)
         else:
@@ -272,10 +291,23 @@ class TextDiffDialog(QDialog):
         # print(paths_for_formats_dict)
 
         text_formats = []
+        convert_options = ' -v -v –enable-heuristics '
         for filtered_path in filtered_paths:
+
+            # ToDo: Convert format only when not TXT format
+
             text_formats.append(filtered_path[2] + '.txt')  # path for converted text format
             print('Text path=' + filtered_path[2] + '.txt')
-            os.system('ebook-convert -v -v -d '  + '"' + filtered_path[2]  + '"' + ' "' + filtered_path[2] + '.txt' + '"')
+
+            # ToDo: Remove soft hyphens
+            # ebook-polish [options] input_file [output_file]
+            # --remove-soft-hyphens
+
+            os.system('ebook-convert ' + '"' + filtered_path[2]  + '"' + ' "' +
+                      filtered_path[2] + '.txt' + '"' +
+                      convert_options)
+
+            # ToDo: Erzeugte TXT Datei in Calibre bekanntmachen
 
         print('text_formats=')
         print(text_formats)
@@ -287,6 +319,10 @@ class TextDiffDialog(QDialog):
 
         with open(diff_file) as f:
             self.result_text.setHtml(f.read())
+
+        # ToDo: Fenster in den Vordergrund bringen
+
+        # ToDo: Warum ist das linke Teil-Fenster schmaler?
 
         return
 
