@@ -302,12 +302,15 @@ class TextDiffDialog(QDialog):
         text_formats = []
         # convert_options = ' -v -v –enable-heuristics '
         convert_options = ' -v -v '
+        qualifier = ''
         for filtered_path in filtered_paths:
 
             # ToDo: Convert format only when not TXT format
 
             txt_format_path = filtered_path[2]  # path for converted text format
             txt_format_path = '_'.join(txt_format_path.rsplit('.', 1))
+            txt_format_path = txt_format_path +  + '_' + filtered_path[0]  # Qualify text file name with book_id
+            qualifier = qualifier + '_' + filtered_path[0]
             txt_format_path = txt_format_path + '.txt'  # path for converted text format
             text_formats.append(txt_format_path)
             print('Text path=' + txt_format_path)
@@ -336,7 +339,8 @@ class TextDiffDialog(QDialog):
         print(text_formats)
         first_file = Path(text_formats[0])  # Path('my_shopping_list.txt')
         second_file = Path(text_formats[1])  # Path('friends_shopping_list.txt')
-        diff_file = Path(os.path.dirname(os.path.abspath(first_file)) + '\\diff_file.html')  # Path('diff_shopping_list.html')
+        # Path('diff_shopping_list.html'). qualify diff file with book id(s)
+        diff_file = Path(os.path.dirname(os.path.abspath(first_file)) + '\\diff_file' + qualifier + '.html')
         print('first_file=' + first_file.name)
         print('second_file=' + second_file.name)
         print('diff_file=' + diff_file.name)
