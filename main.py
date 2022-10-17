@@ -309,8 +309,8 @@ class TextDiffDialog(QDialog):
 
             txt_format_path = filtered_path[2]  # path for converted text format
             txt_format_path = '_'.join(txt_format_path.rsplit('.', 1))
-            txt_format_path = txt_format_path +  + '_' + filtered_path[0]  # Qualify text file name with book_id
-            qualifier = qualifier + '_' + filtered_path[0]
+            txt_format_path = txt_format_path + '_' + str(filtered_path[0])  # Qualify text file name with book_id
+            qualifier = qualifier + '_' + str(filtered_path[0])
             txt_format_path = txt_format_path + '.txt'  # path for converted text format
             text_formats.append(txt_format_path)
             print('Text path=' + txt_format_path)
