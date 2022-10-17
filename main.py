@@ -44,7 +44,7 @@ class TextDiffDialog(QDialog):
         self.file_2_combo.setObjectName("file_2_combo")
         # self.cb.currentIndexChanged.connect(self.selectionchange)
 
-        self.compare_output_label = QLabel(_('Compare output format'))
+        self.compare_output_label = QLabel(_('Display format:'))
         self.compare_output_combo = QComboBox()
         self.compare_output_combo.setObjectName("compare_output_combo")
         output_formats = ['HTML', 'Unified']
@@ -306,8 +306,9 @@ class TextDiffDialog(QDialog):
 
             # ToDo: Convert format only when not TXT format
 
-            txt_format_path = filtered_path[2] + '.txt'  # path for converted text format
-            txt_format_path = txt_format_path.replace('.', '_')
+            txt_format_path = filtered_path[2]  # path for converted text format
+            txt_format_path = '_'.join(txt_format_path.rsplit('.', 1))
+            txt_format_path = txt_format_path + '.txt'  # path for converted text format
             text_formats.append(txt_format_path)
             print('Text path=' + txt_format_path)
 
@@ -321,13 +322,13 @@ class TextDiffDialog(QDialog):
 
             # Erzeugte TXT Datei in Calibre bekanntmachen
             # fpath = Path(' "' + filtered_path[2] + '.txt' + '"')
-            fpath = Path(txt_format_path)
-            fmtf = fpath.name
-            print('fmtf=' + fmtf)
-            if os.path.getsize(fpath) < 1:
-                raise Exception(_('Empty output file, probably the conversion process crashed'))
-            with open(fpath, 'rb') as data:
-                db.add_format(filtered_path[0], 'TXT', data, index_is_id=True)  # book_if, format, stream, replace=True, run_hooks=False
+            # fpath = Path(txt_format_path)
+            # fmtf = fpath.name
+            # print('fmtf=' + fmtf)
+            # if os.path.getsize(fpath) < 1:
+            #     raise Exception(_('Empty output file, probably the conversion process crashed'))
+            # with open(fpath, 'rb') as data:
+            #     db.add_format(filtered_path[0], 'TXT', data, index_is_id=True)  # book_if, format, stream, replace=True, run_hooks=False
             # self.gui.book_converted.emit(book_id, fmt)
             # self.gui.status_bar.show_message(job.description + ' ' + _('Convesion completed'), 2000)
 
@@ -336,10 +337,11 @@ class TextDiffDialog(QDialog):
         first_file = Path(text_formats[0])  # Path('my_shopping_list.txt')
         second_file = Path(text_formats[1])  # Path('friends_shopping_list.txt')
         diff_file = Path(os.path.dirname(os.path.abspath(first_file)) + '\\diff_file.html')  # Path('diff_shopping_list.html')
+        print('first_file=' + first_file.name)
+        print('second_file=' + second_file.name)
+        print('diff_file=' + diff_file.name)
 
         # ToDo: Fenster in den Vordergrund bringen
-
-        # ToDo: Warum ist das linke Teil-Fenster schmaler?
 
         print('Beginning compare...')
 
@@ -347,8 +349,6 @@ class TextDiffDialog(QDialog):
 
         # https://docs.python.org/3/library/difflib.html
 
-        print('first_file=' + first_file.name)
-        print('second_file=' + second_file.name)
         file_1 = open(first_file).readlines()
         file_2 = open(second_file).readlines()
 
@@ -358,19 +358,65 @@ class TextDiffDialog(QDialog):
 
         if str(self.compare_output_combo.currentText()).upper() == 'HTML':
 
-            delta = difflib.HtmlDiff().make_file(file_1, file_2, first_file.name, second_file.name)
+            d = difflib.HtmlDiff()
+
+            # Overwrite Difflib file template (remove legend)
+            d._file_template =  """
+            <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+            "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+            <html>
+            <head>
+                <meta http-equiv="Content-Type"
+                      content="text/html; charset=%(charset)s" />
+                <title></title>
+                <style type="text/css">%(styles)s
+                </style>
+            </head>
+            <body>
+                %(table)s
+            </body>
+            </html>
+            """
+
+            # New CSS for table cols
+            # <tr>
+            # <td class="diff_next"></td>
+            # <td class="diff_header" id="from0_4">4</td>
+            # <td nowrap="nowrap">(some text or blank line from file 1</td>
+            # <td class="diff_next"></td>
+            # <td class="diff_header" id="to0_32">32</td>
+            # <td nowrap="nowrap">(some text or blank line from file 1)</td>
+            # </tr>
+
+            d._styles = d._styles + """
+            table.diff {
+                width: 100%;
+                table-layout: fixed;
+            }
+            td {
+                width:45%;
+            }
+            td.diff_next {
+                display: none;
+            }
+            td.diff_header {
+                width:5%;
+            }
+            """
+
+            delta = d.make_file(file_1, file_2, first_file.name, second_file.name)
             # difflöib.HmlDiff.__init__()
 
             # Erzeugte TXT Datei in Calibre bekanntmachen
-            with open(fpath, 'rb') as data:
-                db.add_format(diff_file, 'HTML', delta, index_is_id=True)  # book_if, format, stream, replace=True, run_hooks=False
+            # with open(fpath, 'rb') as data:
+            #     db.add_format(diff_file, 'HTML', delta, index_is_id=True)  # book_if, format, stream, replace=True, run_hooks=False
 
             # d = difflib.HtmlDiff()#wrapcolumn=10)
             # html = d.make_file(lines1, lines2)
             # delta = difflib.HtmlDiff().make_table(file_1, file_2, first_file.name, second_file.name)
             # ToDo: Direkt speichern geht nicht. delta ist bei make_table ein generator!!!!!!!!!!!
 
-            print('delta=' + delta[:100])
+            print('delta=' + delta[:800])
 
             # ToDo: ggf. make_table verwenden:
             # make_table(fromlines, tolines, fromdesc='', todesc='', context=False, numlines=5)
@@ -379,14 +425,17 @@ class TextDiffDialog(QDialog):
 
             # ToDo: Fortschrittsanzeige
 
+            # Show Diff in GUI
+
             with open(diff_file, "w") as f:
                 f.write(delta)
                 # Show Diff in GUI
                 with open(diff_file) as f:
                     self.result_text.setHtml(f.read())
 
-            # Show Diff in GUI
-            self.result_text.setHtml(delta)
+            # self.result_text.setHtml(delta)
+
+            # ToDo: Warum ist das linke Teil-Fenster schmaler? Legende!?
 
         elif str(self.compare_output_combo.currentText()).upper() == 'UNIFIED':
             delta = difflib.unified_diff(file_1, file_2, first_file.name, second_file.name)
@@ -394,11 +443,20 @@ class TextDiffDialog(QDialog):
             # Show Diff in GUI
             self.result_text.setHtml(delta)
         else:
-            self.result_text.setHtml('Unknown compare  outputoption!')
+            self.result_text.setHtml('Unknown compare outputoption!')
 
         return
 
-
+    def make_diff(self, old, new):
+        """
+        Render in HTML the diff between two texts
+        """
+        df = HtmlDiff()
+        old_lines = old.splitlines(1)
+        new_lines = new.splitlines(1)
+        html = df.make_table(old_lines, new_lines, context=True)
+        html = html.replace(' nowrap="nowrap"', '')
+        return html
 
     def get_book_info_from_book_id(self, book_id):
         book = {}
