@@ -397,15 +397,6 @@ class TextDiffDialog(QDialog):
                 width: 100%;
                 table-layout: fixed;
             }
-            td {
-                width:45%;
-            }
-            td.diff_next {
-                display: none;
-            }
-            td.diff_header {
-                width:5%;
-            }
             """
 
             delta = d.make_file(file_1, file_2, first_file.name, second_file.name)
@@ -439,7 +430,16 @@ class TextDiffDialog(QDialog):
 
             # self.result_text.setHtml(delta)
 
-            # ToDo: Warum ist das linke Teil-Fenster schmaler? Legende!?
+            # ToDo: Warum ist das linke Teil-Fenster schmaler?
+
+            # Delete the generated files
+            if os.path.exists(file_1):
+                os.remove(file_1)
+            if os.path.exists(file_2):
+                os.remove(file_2)
+            # if os.path.exists(diff_file):
+            #     os.remove(diff_file)
+
 
         elif str(self.compare_output_combo.currentText()).upper() == 'UNIFIED':
             delta = difflib.unified_diff(file_1, file_2, first_file.name, second_file.name)
