@@ -433,10 +433,10 @@ class TextDiffDialog(QDialog):
             # ToDo: Warum ist das linke Teil-Fenster schmaler?
 
             # Delete the generated files
-            if os.path.exists(file_1):
-                os.remove(file_1)
-            if os.path.exists(file_2):
-                os.remove(file_2)
+            if os.path.exists(text_formats[0]):
+                os.remove(text_formats[0])
+            if os.path.exists(text_formats[0]):
+                os.remove(text_formats[0])
             # if os.path.exists(diff_file):
             #     os.remove(diff_file)
 
