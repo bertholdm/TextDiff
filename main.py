@@ -306,26 +306,28 @@ class TextDiffDialog(QDialog):
 
             # ToDo: Convert format only when not TXT format
 
-            text_formats.append(filtered_path[2] + '.txt')  # path for converted text format
-            print('Text path=' + filtered_path[2] + '.txt')
+            txt_format_path = filtered_path[2] + '.txt'  # path for converted text format
+            txt_format_path = txt_format_path.replace('.', '_')
+            text_formats.append(txt_format_path)
+            print('Text path=' + txt_format_path)
 
             # ToDo: Remove soft hyphens
             # ebook-polish [options] input_file [output_file]
             # --remove-soft-hyphens
 
             os.system('ebook-convert ' + '"' + filtered_path[2]  + '"' + ' "' +
-                      filtered_path[2] + '.txt' + '"' +
+                      txt_format_path + '"' +
                       convert_options)
 
-            # ToDo: Erzeugte TXT Datei in Calibre bekanntmachen
+            # Erzeugte TXT Datei in Calibre bekanntmachen
             # fpath = Path(' "' + filtered_path[2] + '.txt' + '"')
-            fpath = Path(filtered_path[2] + '.txt')
+            fpath = Path(txt_format_path)
             fmtf = fpath.name
             print('fmtf=' + fmtf)
             if os.path.getsize(fpath) < 1:
                 raise Exception(_('Empty output file, probably the conversion process crashed'))
             with open(fpath, 'rb') as data:
-                db.add_format(filtered_path[0], 'TXT', data, index_is_id=True)
+                db.add_format(filtered_path[0], 'TXT', data, index_is_id=True)  # book_if, format, stream, replace=True, run_hooks=False
             # self.gui.book_converted.emit(book_id, fmt)
             # self.gui.status_bar.show_message(job.description + ' ' + _('Convesion completed'), 2000)
 
@@ -356,12 +358,18 @@ class TextDiffDialog(QDialog):
 
         if str(self.compare_output_combo.currentText()).upper() == 'HTML':
 
-            # delta = difflib.HtmlDiff().make_file(file_1, file_2, first_file.name, second_file.name)
+            delta = difflib.HtmlDiff().make_file(file_1, file_2, first_file.name, second_file.name)
             # difflöib.HmlDiff.__init__()
+
+            # Erzeugte TXT Datei in Calibre bekanntmachen
+            with open(fpath, 'rb') as data:
+                db.add_format(diff_file, 'HTML', delta, index_is_id=True)  # book_if, format, stream, replace=True, run_hooks=False
 
             # d = difflib.HtmlDiff()#wrapcolumn=10)
             # html = d.make_file(lines1, lines2)
-            delta = difflib.HtmlDiff().make_table(file_1, file_2, first_file.name, second_file.name)
+            # delta = difflib.HtmlDiff().make_table(file_1, file_2, first_file.name, second_file.name)
+            # ToDo: Direkt speichern geht nicht. delta ist bei make_table ein generator!!!!!!!!!!!
+
             print('delta=' + delta[:100])
 
             # ToDo: ggf. make_table verwenden:
@@ -371,23 +379,22 @@ class TextDiffDialog(QDialog):
 
             # ToDo: Fortschrittsanzeige
 
-            # with open(diff_file, "w") as f:
-            #     f.write(delta)
-            #     # Show Diff in GUI
-            #     with open(diff_file) as f:
-            #         self.result_text.setHtml(f.read())
+            with open(diff_file, "w") as f:
+                f.write(delta)
+                # Show Diff in GUI
+                with open(diff_file) as f:
+                    self.result_text.setHtml(f.read())
+
             # Show Diff in GUI
+            self.result_text.setHtml(delta)
 
-            # ToDo: Direkt speichern geht nicht. delta ist ein generator!!!!!!!!!!!
-
-            self.result_text.setHtml((delta))
         elif str(self.compare_output_combo.currentText()).upper() == 'UNIFIED':
             delta = difflib.unified_diff(file_1, file_2, first_file.name, second_file.name)
             print('delta=' + delta[:100])
             # Show Diff in GUI
-            self.result_text.setHtml((delta))
+            self.result_text.setHtml(delta)
         else:
-            pass
+            self.result_text.setHtml('Unknown compare  outputoption!')
 
         return
 
