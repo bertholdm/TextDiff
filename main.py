@@ -439,9 +439,16 @@ class TextDiffDialog(QDialog):
 
         elif str(self.compare_output_combo.currentText()).upper() == 'UNIFIED':
             delta = difflib.unified_diff(file_1, file_2, first_file.name, second_file.name)
-            print('delta=' + delta[:100])
+            text = ''
+            newline = '\n'
+            for line in delta:
+                text += line
+                # Work around missing newline (http://bugs.python.org/issue2142).
+                if text and not line.endswith(newline):
+                    text += newline
+            print('delta=' + text[:800])
             # Show Diff in GUI
-            self.result_text.setHtml(delta)
+            self.result_text.setPlainText(text)
         else:
             self.result_text.setHtml('Unknown compare outputoption!')
 
