@@ -2,10 +2,11 @@
 
 import time, os
 from pathlib import Path
-import difflib
+import difflib  # https://github.com/python/cpython/blob/3.11/Lib/difflib.py
+
 from PyQt5.Qt import (QDialog, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QFont, QGridLayout, QSize,
-                      QTextEdit, QComboBox, QCheckBox, QPushButton, QTabWidget, QScrollArea, QMessageBox, QMainWindow)
-#                      QWebEngineWidgets)
+                      QTextEdit, QComboBox, QCheckBox, QPushButton, QTabWidget, QScrollArea, QMessageBox, QMainWindow,
+                      QApplication, QClipboard)
 from calibre.gui2 import gprefs, error_dialog, info_dialog
 from calibre.ebooks.conversion.config import (get_input_format_for_book, sort_formats_by_preference)
 from calibre.ebooks.oeb.iterator import EbookIterator
@@ -146,6 +147,20 @@ class TextDiffDialog(QDialog):
             self.file_2_combo.addItems(str(x.upper()) for x in mi1.formats)
             # self.file_2_combo.setCurrentIndex(self.file_2_combo.index(input_format))
 
+    def IS_CHARACTER_JUNK(ch, ws=" \t"):
+        r"""
+        Return True for ignorable character: iff `ch` is a space or tab.
+        Examples:
+        >>> IS_CHARACTER_JUNK(' ')
+        True
+        >>> IS_CHARACTER_JUNK('\t')
+        True
+        >>> IS_CHARACTER_JUNK('\n')
+        False
+        >>> IS_CHARACTER_JUNK('x')
+        False
+        """
+        return ch in ws
 
     def sizeHint(self):
         # notwendig? (stammt aus single.py)
@@ -167,7 +182,12 @@ class TextDiffDialog(QDialog):
         pass
 
     def copy(self):
-        pass
+
+        # ToDo: choice betwenn marked text and full text
+
+        # paste compare result to clipboard
+        txt = self.result_text.selectAll()
+        QApplication.clipboard().setText(txt)
 
     def create_diff(self, first_file: Path, second_file: Path, diff_file: Path = None):
 
@@ -178,11 +198,8 @@ class TextDiffDialog(QDialog):
         file_1 = open(first_file).readlines()
         file_2 = open(second_file).readlines()
 
-        # ToDo: Options for select Diff Mode (unified_diff, HTMLDiff, ...)
-        # If diff_mode == 'HTMLDiff':
-        # If diff_mode == 'unified_diff':
-
         print('Beginning compare...')
+        self.gui.status_bar.showMessage(_('Starting compare...'))
 
         if diff_file:
 
@@ -205,7 +222,7 @@ class TextDiffDialog(QDialog):
     def compare(self):
         # This is the main process
         log('Starting compare...')
-
+        self.gui.status_bar.showMessage(_('Starting compare...'))
 
         # db = self.gui.current_db.new_api
         db = self.gui.library_view.model().db
@@ -302,10 +319,18 @@ class TextDiffDialog(QDialog):
         text_formats = []
         # convert_options = ' -v -v –enable-heuristics '
         convert_options = ' -v -v '
+        convert_options = convert_options + ' --sr1-search (?m)^\s*$ --sr1-replace ""'
+        # if re.match(r'^\s*$', line):
+        #     # line is empty (has only the following: \t\n\r and whitespace)
+        # --sr1-replace
+        # Ersatz zum Ersetzen des mit "sr1-search" gefundenen Textes.
+        # --sr1-search
+        # Suchmuster (regulärer Ausdruck), das durch "sr1-replace" ersetzt werden soll.
+
         qualifier = ''
         for filtered_path in filtered_paths:
 
-            # ToDo: Convert format only when not TXT format
+            # Convert even if format is TXT to apply convert options
 
             txt_format_path = filtered_path[2]  # path for converted text format
             txt_format_path = '_'.join(txt_format_path.rsplit('.', 1))
@@ -318,6 +343,12 @@ class TextDiffDialog(QDialog):
             # ToDo: Remove soft hyphens
             # ebook-polish [options] input_file [output_file]
             # --remove-soft-hyphens
+
+            if os.path.exists(txt_format_path):
+                os.remove(txt_format_path)
+
+            print('Starting ebook-convert...')
+            self.gui.status_bar.showMessage(_('Starting ebook-convert...'))
 
             os.system('ebook-convert ' + '"' + filtered_path[2]  + '"' + ' "' +
                       txt_format_path + '"' +
@@ -340,6 +371,9 @@ class TextDiffDialog(QDialog):
         first_file = Path(text_formats[0])  # Path('my_shopping_list.txt')
         second_file = Path(text_formats[1])  # Path('friends_shopping_list.txt')
         # Path('diff_shopping_list.html'). qualify diff file with book id(s)
+        # ToDo: remove diff_file?
+        # if os.path.exists(diff_file):
+        #     os.remove(diff_file)
         diff_file = Path(os.path.dirname(os.path.abspath(first_file)) + '\\diff_file' + qualifier + '.html')
         print('first_file=' + first_file.name)
         print('second_file=' + second_file.name)
@@ -348,113 +382,225 @@ class TextDiffDialog(QDialog):
         # ToDo: Fenster in den Vordergrund bringen
 
         print('Beginning compare...')
+        self.gui.status_bar.showMessage(_('Beginning compare...'))
 
         # self.create_diff(first_file, second_file, diff_file)
 
         # https://docs.python.org/3/library/difflib.html
 
-        file_1 = open(first_file).readlines()
-        file_2 = open(second_file).readlines()
+        # ToDo: get rid of empty lines
+        # "readlines" returns a list containing the lines.
 
-        # ToDo: Options for select Diff Mode (unified_diff, HTMLDiff, ...)
-        # If diff_mode == 'HTMLDiff':
-        # If diff_mode == 'unified_diff':
+        if os.path.exists(first_file):
+            print('Reading first file in list...')
+            with open(first_file) as f:
+                # If you use the None as a function argument, the filter method will remove any element
+                # from the iterable that it considers to be false.
+                file_1 = list(filter(None, (line.rstrip() for line in f)))
+            print('First file has {0} lines.'.format(len(file_1)))
+            print('First 10 items of first file:')
+            print(file_1[:10])
+            # file_1 = open(first_file).readlines()
+        else:
+            return error_dialog(self.gui, _('TextDiff plugin'),
+                                _('The file {0} don\'t exist. Probably conversion to text format failed.'.format(first_file)),
+                                show=True)
+        if os.path.exists(second_file):
+            print('Reading second file in list...')
+            with open(second_file) as f:
+                # If you use the None as a function argument, the filter method will remove any element
+                # from the iterable that it considers to be false.
+                file_2 = list(filter(None, (line.rstrip() for line in f)))
+            print('Second file has {0} lines.'.format(len(file_2)))
+            print('First 10 items of second file:')
+            print(file_2[:10])
+            # file_2 = open(second_file).readlines()
+        else:
+            return error_dialog(self.gui, _('TextDiff plugin'),
+                                _('The file {0} don\'t exist. Probably conversion to text format failed.'.format(second_file)),
+                                show=True)
+        # with open(first_file) as f:
+        #     file_1 = list(line for line in (l.strip() for l in f) if line)
+        # with open(second_file) as f:
+        #     file_2 = list(line for line in (l.strip() for l in f) if line)
 
-        if str(self.compare_output_combo.currentText()).upper() == 'HTML':
+        # https://docs.python.org/3/library/difflib.html
+        # ToDo: wrapcolumn, linejunk, charjunk as parm
+        print('Instantiate HtmlDiff...')
+        d = difflib.HtmlDiff(tabsize=4, wrapcolumn=60, linejunk=None, charjunk=TextDiffDialog.IS_CHARACTER_JUNK)
 
-            d = difflib.HtmlDiff()
+        # Overwrite Difflib table and file templates (remove legend and modernize html and css)
 
-            # Overwrite Difflib file template (remove legend)
-            d._file_template =  """
-            <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-            "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-            <html>
+        #     <table class="diff" id="difflib_chg_%(prefix)s_top"
+        #            cellspacing="0" cellpadding="0" rules="groups" >
+        #         <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        #         <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+        #         %(header_row)s
+        #         <tbody>
+        # %(data_rows)s        </tbody>
+        #     </table>"""
+
+        d._table_template = """
+            <table class="diff" id="difflib_chg_%(prefix)s_top"
+                   cellspacing="0" cellpadding="0">
+               <colgroup>
+                   <col style="width:1%%">
+                   <col style="width:3%%">
+                   <col style="width:46%%">
+                   <col style="width:1%%">
+                   <col style="width:3%%">
+                   <col style="width:46%%">
+               </colgroup>
+               %(header_row)s
+               <tbody>
+                    %(data_rows)s
+               </tbody>
+            </table>"""
+
+        d._file_template =  """
+        <!DOCTYPE html>
+        <html>
             <head>
                 <meta http-equiv="Content-Type"
                       content="text/html; charset=%(charset)s" />
-                <title></title>
-                <style type="text/css">%(styles)s
-                </style>
+                <title>TextDiff</title>
+                <style>%(styles)s</style>
             </head>
-            <body>
+            <body>  
                 %(table)s
             </body>
-            </html>
-            """
+        </html>
+        """
 
-            # New CSS for table cols
-            # <tr>
-            # <td class="diff_next"></td>
-            # <td class="diff_header" id="from0_4">4</td>
-            # <td nowrap="nowrap">(some text or blank line from file 1</td>
-            # <td class="diff_next"></td>
-            # <td class="diff_header" id="to0_32">32</td>
-            # <td nowrap="nowrap">(some text or blank line from file 1)</td>
-            # </tr>
+        # New CSS for table cols
+        # <tr>
+        # <td class="diff_next"></td>
+        # <td class="diff_header" id="from0_4">4</td>
+        # <td nowrap="nowrap">(some text or blank line from file 1</td>
+        # <td class="diff_next"></td>
+        # <td class="diff_header" id="to0_32">32</td>
+        # <td nowrap="nowrap">(some text or blank line from file 1)</td>
+        # </tr>
 
-            d._styles = d._styles + """
-            table.diff {
-                width: 100%;
-                table-layout: fixed;
-            }
-            """
+        d._styles = """
+        table.diff {
+            width: 100%;
+            table-layout: fixed;
+            border-spacing: 0;
+            font-family: sans-serif; 
+            border: none;
+            border-collapse: collapse;
+        }
+        th, td {
+            white-space:nowrap;
+        }
+        .diff_header {background-color:#e0e0e0}
+        td.diff_header {text-align:right}
+        .diff_next {background-color:#c0c0c0}
+        .diff_add {background-color:#aaffaa}
+        .diff_chg {background-color:#ffff77}
+        .diff_sub {background-color:#ffaaaa}
+        """
 
-            delta = d.make_file(file_1, file_2, first_file.name, second_file.name)
-            # difflöib.HmlDiff.__init__()
+        #     """For producing HTML side by side comparison with change highlights.
+        #     This class can be used to create an HTML table (or a complete HTML file
+        #     containing the table) showing a side by side, line by line comparison
+        #     of text with inter-line and intra-line change highlights.  The table can
+        #     be generated in either full or contextual difference mode.
+        #     The following methods are provided for HTML generation:
+        #     make_table -- generates HTML for a single side by side table
+        #     make_file -- generates complete HTML file with a single side by side table
+        #     See tools/scripts/diff.py for an example usage of this class.
+        #     """
 
-            # Erzeugte TXT Datei in Calibre bekanntmachen
-            # with open(fpath, 'rb') as data:
-            #     db.add_format(diff_file, 'HTML', delta, index_is_id=True)  # book_if, format, stream, replace=True, run_hooks=False
+        #         Arguments:
+        #         fromlines -- list of "from" lines
+        #         tolines -- list of "to" lines
+        #         fromdesc -- "from" file column header string
+        #         todesc -- "to" file column header string
+        #         context -- set to True for contextual differences (defaults to False
+        #             which shows full differences).
+        #         numlines -- number of context lines.  When context is set True,
+        #             controls number of lines displayed before and after the change.
+        #             When context is False, controls the number of lines to place
+        #             the "next" link anchors before the next change (so click of
+        #             "next" link jumps to just before the change).
+        #         charset -- charset of the HTML document
+        #         """
+        # ToDo: context, numlines as parm
+        print('Calling HtmlDiff.make_file...')
+        delta = d.make_file(file_1, file_2, first_file.name, second_file.name, context=True, numlines=60, charset='utf-8')
+        # difflöib.HmlDiff.__init__()
 
-            # d = difflib.HtmlDiff()#wrapcolumn=10)
-            # html = d.make_file(lines1, lines2)
-            # delta = difflib.HtmlDiff().make_table(file_1, file_2, first_file.name, second_file.name)
-            # ToDo: Direkt speichern geht nicht. delta ist bei make_table ein generator!!!!!!!!!!!
+        # d = difflib.HtmlDiff()#wrapcolumn=10)
+        # html = d.make_file(lines1, lines2)
+        # delta = difflib.HtmlDiff().make_table(file_1, file_2, first_file.name, second_file.name)
+        # ToDo: Direkt speichern geht nicht. delta ist bei make_table ein generator!!!!!!!!!!!
 
-            print('delta=' + delta[:800])
+        print('Compare finished, delta[:2000]=' + delta[:2000])
+        self.gui.status_bar.showMessage(_('Compare finished.'))
 
-            # ToDo: ggf. make_table verwenden:
-            # make_table(fromlines, tolines, fromdesc='', todesc='', context=False, numlines=5)
-            # Compares fromlines and tolines (lists of strings) and returns a string which is a complete HTML table showing line by line differences with inter-line and intra-line changes highlighted.
-            # The arguments for this method are the same as those for the make_file() method
+        # ToDo: ggf. make_table verwenden:
+        # make_table(fromlines, tolines, fromdesc='', todesc='', context=False, numlines=5)
+        # Compares fromlines and tolines (lists of strings) and returns a string which is a complete HTML table showing line by line differences with inter-line and intra-line changes highlighted.
+        # The arguments for this method are the same as those for the make_file() method
 
-            # ToDo: Fortschrittsanzeige
+        # ToDo: Fortschrittsanzeige
 
-            # Show Diff in GUI
+        # Show Diff in GUI
 
-            with open(diff_file, "w") as f:
-                f.write(delta)
-                # Show Diff in GUI
-                with open(diff_file) as f:
-                    self.result_text.setHtml(f.read())
+        # Check if differences found
+        # <tr>
+        # <td class="diff_next"><a href="#difflib_chg_to2__top">t</a></td>
+        # <td></td>
+        # <td>&nbsp;No Differences Found&nbsp;</td>
+        # <td class="diff_next"><a href="#difflib_chg_to2__top">t</a></td>
+        # <td></td>
+        # <td>&nbsp;No Differences Found&nbsp;</td>
+        # </tr>
+        if '<td>&nbsp;No Differences Found&nbsp;</td>' in delta:
+            self.result_text.setPlainText(_('No differences found in text. However, there may be differences in formatting or MIME content.'))
 
-            # self.result_text.setHtml(delta)
-
-            # ToDo: Warum ist das linke Teil-Fenster schmaler?
-
-            # Delete the generated files
-            if os.path.exists(text_formats[0]):
-                os.remove(text_formats[0])
-            if os.path.exists(text_formats[0]):
-                os.remove(text_formats[0])
-            # if os.path.exists(diff_file):
-            #     os.remove(diff_file)
-
-
-        elif str(self.compare_output_combo.currentText()).upper() == 'UNIFIED':
-            delta = difflib.unified_diff(file_1, file_2, first_file.name, second_file.name)
-            text = ''
-            newline = '\n'
-            for line in delta:
-                text += line
-                # Work around missing newline (http://bugs.python.org/issue2142).
-                if text and not line.endswith(newline):
-                    text += newline
-            print('delta=' + text[:800])
-            # Show Diff in GUI
-            self.result_text.setPlainText(text)
         else:
-            self.result_text.setHtml('Unknown compare outputoption!')
+
+            if str(self.compare_output_combo.currentText()).upper() == 'HTML':
+
+                # ToDo: ggf. delta html modifizieren
+
+                with open(diff_file, "w") as f:
+                    f.write(delta)
+                    # Show Diff in GUI
+                    self.result_text.clear()
+                    with open(diff_file) as f:
+                        self.result_text.setHtml(f.read())
+
+                # self.result_text.setHtml(delta)
+
+            elif str(self.compare_output_combo.currentText()).upper() == 'UNIFIED':
+                delta = difflib.unified_diff(file_1, file_2, first_file.name, second_file.name)
+                text = ''
+                newline = '\n'
+                for line in delta:
+                    text += line
+                    # Work around missing newline (http://bugs.python.org/issue2142).
+                    if text and not line.endswith(newline):
+                        text += newline
+                print('delta=' + text[:800])
+                # Show Diff in GUI
+                self.result_text.clear()
+                self.result_text.setPlainText(text)
+            else:
+                self.result_text.clear()
+                self.result_text.setPlainText(_('Unknown compare output option!'))
+
+        # Delete the generated files
+        print('Deleting temp files...')
+        if os.path.exists(text_formats[0]):
+            os.remove(text_formats[0])
+        if os.path.exists(text_formats[1]):
+            os.remove(text_formats[1])
+        if os.path.exists(diff_file):
+            os.remove(diff_file)
 
         return
 
@@ -653,3 +799,39 @@ class AboutWindow(QMainWindow):
 
     def clicked(self):
         self.close()
+
+
+class MyHTML(difflib.HtmlDiff):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # append new styles inside new class
+        self._styles = self._styles + """
+table.diff {width: 300px}
+.diff_sub {display: inline-block; word-break: break-word;}
+.diff_add {display: inline-block; word-break: break-word;}
+"""
+
+    # function from source code - I remove only `nowrap="nowrap"`
+    def _format_line(self, side, flag, linenum, text):
+        """Returns HTML markup of "from" / "to" text lines
+        side -- 0 or 1 indicating "from" or "to" text
+        flag -- indicates if difference on line
+        linenum -- line number (used for line number column)
+        text -- line text to be marked up
+        """
+        try:
+            linenum = '%d' % linenum
+            id = ' id="%s%s"' % (self._prefix[side], linenum)
+        except TypeError:
+            # handle blank lines where linenum is '>' or ''
+            id = ''
+        # replace those things that would get confused with HTML symbols
+        text = text.replace("&", "&amp;").replace(">", "&gt;").replace("<", "&lt;")
+
+        # make space non-breakable so they don't get compressed or line wrapped
+        text = text.replace(' ', '&nbsp;').rstrip()
+
+        return '<td class="diff_header"%s>%s</td><td>%s</td>' \
+               % (id, linenum, text)
