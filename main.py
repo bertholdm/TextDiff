@@ -4,11 +4,7 @@ import time, os, math
 from pathlib import Path
 import difflib  # https://github.com/python/cpython/blob/3.11/Lib/difflib.py
 
-# ToDo: Use Beautifulsoup
-
-from lxml import etree
-from lxml.etree import tostring
-import lxml.html
+from bs4 import BeautifulSoup
 
 from PyQt5.QtCore import Qt
 from PyQt5.Qt import (QDialog, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QFont, QGridLayout, QSize,
@@ -32,6 +28,10 @@ class TextDiffDialog(QDialog):
         self.gui = gui
         self.do_user_config = do_user_config
         book_ids = []
+        diff = ''
+        diff_strict = ''
+        diff_lines = ['class="diff_add"', 'class="diff_sub"', 'class="diff_chg"']
+        diff_classes = ['diff_add', 'diff_sub', 'diff_chg']
 
         # Overwrite Difflib table and file templates (remove legend and modernize html and css)
 
@@ -40,8 +40,7 @@ class TextDiffDialog(QDialog):
         #         <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
         #         <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
         #         %(header_row)s
-        #         <tbody>
-        # %(data_rows)s        </tbody>
+        #         <tbody>%(data_rows)s</tbody>
         #     </table>"""
 
         self.table_template = """
@@ -100,12 +99,25 @@ class TextDiffDialog(QDialog):
         }
         .diff_header {background-color:#e0e0e0}
         td.diff_header {text-align:right}
-        .diff_next {background-color:#c0c0c0}
+        .diff_next {text-align:center; background-color:#c0c0c0}
         .diff_add {background-color:#aaffaa}
         .diff_chg {background-color:#ffff77}
         .diff_sub {background-color:#ffaaaa}
         """
 
+        self.before_table_template = """
+        <!DOCTYPE html>
+        <html>
+            <head>
+                <meta http-equiv="Content-Type" content="text/html; charset=%(charset)s" />
+                <title>TextDiff</title>
+                <style>""" + self.styles + """</style>
+            </head>
+            <body>"""
+
+        self.after_table_template = """
+            </body>
+        </html>"""
 
         # The current database shown in the GUI
         # db is an instance of the class LibraryDatabase from db/legacy.py
@@ -159,7 +171,7 @@ class TextDiffDialog(QDialog):
         self.txt_file_content_combo_1.setObjectName("txt_file_content_combo_1")
         # self.cb.currentIndexChanged.connect(self.selectionchange)
 
-        self.refresh_formats_button = QPushButton(_('Refresh formats list.'), self)
+        self.refresh_formats_button = QPushButton(_('Refresh book formats list'), self)
         self.refresh_formats_button.clicked.connect(self.refresh_formats)
 
         # linejunk=None, charjunk=IS_CHARACTER_JUNK (difflib.ndiff)
@@ -168,24 +180,9 @@ class TextDiffDialog(QDialog):
         self.compare_output_label.setAlignment(Qt.AlignRight)
         self.compare_output_combo = QComboBox()
         self.compare_output_combo.setObjectName("compare_output_combo")
-        output_formats = ['HTML', 'Unified']
+        output_formats = ['HTML', 'Context', 'Unified']
         self.compare_output_combo.addItems(x for x in output_formats)
         self.compare_output_combo.currentTextChanged.connect(self.on_compare_output_combo_changed)
-
-        # Nur bei unified_diff!
-        # Unified diffs are a compact way of showing just the lines that have changed plus a few lines of context.
-        # The changes are shown in an inline style (instead of separate before/after blocks).
-        # The number of context lines is set by n which defaults to three.
-        self.context_lines_label = QLabel(_('Number of context lines for unified diff:'))
-        self.context_lines_label.setAlignment(Qt.AlignRight)
-        self.context_lines = QLineEdit(self)
-        self.context_lines.setFixedWidth(30)
-        self.context_lines.setAlignment(Qt.AlignRight)
-        self.context_lines.setValidator(QIntValidator())
-        self.context_lines.setMaxLength(2)
-        self.context_lines.setText('3')
-        self.context_lines.setEnabled(False)  # enabled only when compare_output_combo is 'HTML''
-
 
         # ToDo: Rahmen um zusammengehörige widgets
         # groupbox = QGroupBox("GroupBox Example")
@@ -199,12 +196,13 @@ class TextDiffDialog(QDialog):
         # vbox.addWidget(radiobutton)
         # vbox.addWidget(radiobutton)
 
+        # The table can be generated in either full or contextual difference mode
         # Nur bei HtmlDiff! context=True, numlines=10
         # ToDo: ebenfalls combo prüfen, wie oben
-        self.context_diff = QCheckBox(_('Only contextual diffs'))
+        self.context = QCheckBox(_('Show only contextual diffs'))
         # Set context to True when contextual differences are to be shown, else the default is False to show the full files.
-        self.context_diff.setChecked(False)
-        self.context_diff.stateChanged.connect(self.oncontext_diffChangedState)
+        self.context.setChecked(False)
+        self.context.stateChanged.connect(self.on_context_ChangedState)
 
         # numlines defaults to 5. When context is True numlines controls the number of context lines which surround
         # the difference highlights. When context is False numlines controls the number of lines which are shown
@@ -220,8 +218,11 @@ class TextDiffDialog(QDialog):
         self.numlines.setText('5')
         # if initial_value != None:
         #     self.lnumines.setText(str(initial_value))
-        self.numlines.setEnabled(False)  # enabled only when context_diff is checked
+        self.numlines.setEnabled(False)  # enabled only when context is checked
 
+        # ToDo: calculate similarity (SequenceMatcher)
+        self.calculate_ratio = QCheckBox(_('Calculate ratio (similarity)'))
+        self.calculate_ratio.setChecked(True)
 
         self.compare_button = QPushButton(_('Compare'), self)
         self.compare_button.clicked.connect(self.compare)
@@ -234,12 +235,16 @@ class TextDiffDialog(QDialog):
 
         self.hide_equals = QCheckBox(_('Hide equal lines'))
         self.hide_equals.setChecked(False)
+        self.hide_equals.stateChanged.connect(self.on_hide_equals_ChangedState)
 
-        # ToDo: calculate similarity (SequenceMatcher)
-        self.calculate_ratio = QCheckBox(_('Calculate ratio (similarity)'))
-        self.calculate_ratio.setChecked(False)
+        self.ratio_label = QLabel('Ratio is:')
+        self.ratio_label.setObjectName('ratio_label')
+        self.ratio = QLineEdit(self)
+        # self.ratio.setEnabled(False)
 
-        self.save_diff_file_button = QPushButton(_('Save diff to file.'), self)
+        self.copy_diff_file_button = QPushButton(_('Copy output to clipboard.'), self)
+        self.copy_diff_file_button.clicked.connect(self.copy_diff_file)
+        self.save_diff_file_button = QPushButton(_('Save output to file.'), self)
         self.save_diff_file_button.clicked.connect(self.save_diff_file)
 
         # addWidget(*Widget, row, column, rowspan, colspan)
@@ -257,23 +262,25 @@ class TextDiffDialog(QDialog):
         # row 4
         self.grid_layout.addWidget(self.compare_output_label, 4, 0, 1, 1)
         self.grid_layout.addWidget(self.compare_output_combo, 4, 1, 1, 1)
-        # row 5: nur bei unified_diff
-        self.grid_layout.addWidget(self.context_lines_label, 5, 0, 1, 1)
-        self.grid_layout.addWidget(self.context_lines, 5, 1, 1, 1)
+        # row 5: entfällt
         # row 6: Nur bei HtmlDiff
-        self.grid_layout.addWidget(self.context_diff, 6, 1, 1, 1)
+        self.grid_layout.addWidget(self.context, 6, 1, 1, 1)
         # row 7
         self.grid_layout.addWidget(self.numlines_label, 7, 0, 1, 1)
         self.grid_layout.addWidget(self.numlines, 7, 1, 1, 1)
         # row 8
-        self.grid_layout.addWidget(self.compare_button, 8, 0, 1, 2)
+        self.grid_layout.addWidget(self.calculate_ratio, 8, 1, 1, 1)
         # row 9
-        self.grid_layout.addWidget(self.hide_equals, 9, 0, 1, 1)
-        self.grid_layout.addWidget(self.calculate_ratio, 9, 1, 1, 1)
+        self.grid_layout.addWidget(self.compare_button, 9, 0, 1, 2)
         # row 10
-        self.grid_layout.addWidget(self.text_browser, 10, 0, 1, 2)
+        self.grid_layout.addWidget(self.hide_equals, 10, 0, 1, 1)
+        # self.grid_layout.addWidget(self.ratio_label, 10, 1, 1, 1)
+        self.grid_layout.addWidget(self.ratio, 10, 1, 1, 1)
         # row 11
-        self.grid_layout.addWidget(self.save_diff_file_button, 11, 0, 1, 2)
+        self.grid_layout.addWidget(self.text_browser, 11, 0, 1, 2)
+        # row 12
+        self.grid_layout.addWidget(self.copy_diff_file_button, 12, 0, 1, 1)
+        self.grid_layout.addWidget(self.save_diff_file_button, 12, 1, 1, 1)
 
         # Two column grid that fills the width of the page, each column taking up one half the space
         # If you want two columns to have the same width, you must set their minimum widths and stretch factors
@@ -310,17 +317,26 @@ class TextDiffDialog(QDialog):
         """
         return ch in ws
 
-    def oncontext_diffChangedState(self, checked):
-        if self.context_diff.isChecked():
+
+    def on_hide_equals_ChangedState(self, checked):
+        if self.hide_equals.isChecked():
+            self.text_browser.setHtml(self.diff_strict)
+        else:
+            self.text_browser.setHtml(self.diff)
+
+
+    def on_context_ChangedState(self, checked):
+        if self.context.isChecked():
             self.numlines.setEnabled(True)
         else:
             self.numlines.setEnabled(False)
 
+
     def on_compare_output_combo_changed(self, value):
         if value == 'Unified':
-            self.context_lines.setEnabled(True)
+            self.numlines.setEnabled(True)
         else:
-            self.context_lines.setEnabled(False)
+            self.numlines.setEnabled(False)
 
 
     def sizeHint(self):
@@ -404,20 +420,9 @@ class TextDiffDialog(QDialog):
                     self.txt_file_content_combo_1.clear()
                     self.txt_file_content_combo_1.addItems(str(x.upper()) for x in mi.formats)
 
-
-    def save_current_file(self):
-        # ToDo: Save as html or txt, depending on output format combo
-        if not self.file_path:
-            new_file_path, filter_type = QFileDialog.getSaveFileName(self, "Save this file as...", "", "All files (*)")
-            if new_file_path:
-                self.file_path = new_file_path
-            else:
-                self.invalid_path_alert_message()
-                return False
-        file_contents = self.scrollable_text_area.toPlainText()
-        with open(self.file_path, "w") as f:
-            f.write(file_contents)
-        self.title.setText(self.file_path)
+        # Clear output widgets
+        self.ratio.setText('')
+        self.text_browser.clear()
 
 
     def closeEvent(self, event):
@@ -438,76 +443,64 @@ class TextDiffDialog(QDialog):
         #     event.ignore()
 
 
-    def copy_all(self):
-        # paste entire text in compare result to clipboard
-        txt = self.result_text.selectAll()
-        QApplication.clipboard().setText(txt)
-
-
     # ToDo: compare(txt_file_path[0], txt_file_path[1], options). convert separat!
     def compare(self):
         # This is the main process
         log('Starting compare...')
         self.gui.status_bar.showMessage(_('Starting compare...'))
 
-        # db = self.gui.current_db.new_api
-        db = self.gui.library_view.model().db
+        # Get the book id(s) of selected book(s)
+        db = self.gui.library_view.model().db  # db = self.gui.current_db.new_api
         book_ids = self.gui.library_view.get_selected_ids()  # Get a list of book ids
-        print('book_ids:')
-        print(book_ids)  # [285, 286]
+        print('book_ids: {0}'.format(book_ids))  # [285, 286]
         book_count = len(book_ids)
-        # rows = self.gui.library_view.selectionModel().selectedRows()
-        # if not rows or len(rows) == 0:
         if book_count == 0:
-            return error_dialog(self.gui, _('No rows selected'),
+            return error_dialog(self.gui, _('No books selected'),
                             _('You must select one book with more than one format or two books to perform this action.'), show=True)
         if book_count > 2:
-            return error_dialog(self.gui, _('Too much rows selected'),
+            return error_dialog(self.gui, _('Too much books selected'),
                                 _('You must select one book with more than one format or two books to perform this action.'), show=True)
-        # show_copy_button=False
 
-        # ToDo: refactoring doubled code
-
-        paths_for_formats = []
-        for book_id in book_ids:
-            print(book_id)
-            mi = db.get_metadata(book_id, index_is_id=True, get_user_categories=False)
-            title, formats = mi.title, mi.formats
-            fi = 0
-            for format in formats:
-                print(format)
-                if fi == 0 and format == str(self.txt_file_content_combo_0.currentText()).upper():
-                    paths_for_formats.append((book_id, format, db.format_abspath(book_id, format, index_is_id=True)))
-                if fi == 1 and format == str(self.txt_file_content_combo_1.currentText()).upper():
-                    paths_for_formats.append((book_id, format, db.format_abspath(book_id, format, index_is_id=True)))
-                fi = fi + 1
-                print(paths_for_formats)
-        print('**********')
-        print('paths_for_formats={0}'.format(paths_for_formats))
-        # [(285, 'EPUB', 'E:\\Bibliotheken\\Abenteuer\\Jules Verne\\Meister Antifers wunderbare Abenteu (285)\\Meister Antifers wunderbare Abe - Jules Verne.epub'),
-        # (285, 'PDF', 'E:\\Bibliotheken\\Abenteuer\\Jules Verne\\Meister Antifers wunderbare Abenteu (285)\\Meister Antifers wunderbare Abe - Jules Verne.pdf')]
-        # [(286, 'PDF', 'E:\Bibliotheken\Abenteuer\\Sven Hedin\Abenteuer in Tibet. 1899 - 1902_ (286)\\Abenteuer in Tibet. 1899 - 1902 - Sven Hedin.pdf')]
-
-        if len(paths_for_formats) < 2:
-            return error_dialog(self.gui, _('Not enough formats to compare'),
-                                _('The selected book(s) must have at least two formats to compare.'),
-                                show=True)
-
+        available_formats = []
+        books_metadata = []
+        book_formats_info = []
         # finding the content of current item in combo box and save as input formats
         # (output format is always txt)
         selected_formats = []
         selected_formats.append(str(self.txt_file_content_combo_0.currentText()).upper())
         selected_formats.append(str(self.txt_file_content_combo_1.currentText()).upper())
-        print('selected_formats: {0}'.format(selected_formats))  # ['EPUB', 'PDF']
+        print('selected_formats: {0}'.format(selected_formats))  # ['PDF', 'PDF']
+        for book_id in book_ids:
+            print('Fetching metadata from book_id {0}...'.format(book_id))
+            mi = db.get_metadata(book_id, index_is_id=True, get_user_categories=False)
+            books_metadata.append(mi)
+            available_formats.append({'book_id': book_id, 'formats': mi.formats})
+        print('available_formats={0}'.format(available_formats))  # [[book, [fromat, format]], [book, [fromat]]]
 
-        # Kovid says:
-        # If you want to extract text the easiest way to do it is to convert to txt.
-        # You basically need to run the input format plugin on the file, then you can use
-        # calibre.ebooks.oeb.polish.container.Container object to access the contents of the result
-        # of running the input format plugin
+        # Fetch title and path info for the selected book formats
 
-        filtered_paths = paths_for_formats
-        print('filtered_paths: {0}'.format(filtered_paths))
+        # dataList = [{'a': 1}, {'b': 3}, {'c': 5}]
+        for index in range(len(available_formats)):
+            print('The values for the keys in index {0} are:'.format(index))
+            for key in available_formats[index]:
+                print(available_formats[index][key])
+
+        #             for format in available_formats[i][1]:  # Loop thru formats list for this book
+        for i in range(2):
+            print('Fetching info for selected format #{0}'.format(i))
+            if selected_formats[i] in available_formats[i]['formats']:
+                book_id = available_formats[i]['book_id']
+                title = books_metadata[i].title
+                format = selected_formats[i]
+                book_formats_info.append((book_id, title, format, db.format_abspath(book_id, format, index_is_id=True)))
+        print('book_formats_info={0}'.format(book_formats_info))
+        # [(285, 'Meister Antifers wunderbare Abenteuer', 'EPUB', 'E:\\Bibliotheken\\Abenteuer\\Jules Verne\\Meister Antifers wunderbare Abenteu (285)\\Meister Antifers wunderbare Abe - Jules Verne.epub'),
+        # (285, 'Meister Antifers wunderbare Abenteuer', 'PDF', 'E:\\Bibliotheken\\Abenteuer\\Jules Verne\\Meister Antifers wunderbare Abenteu (285)\\Meister Antifers wunderbare Abe - Jules Verne.pdf')]
+
+        if len(book_formats_info) < 2:
+            return error_dialog(self.gui, _('Not enough formats to compare'),
+                                _('The selected book(s) must have at least two formats to compare.'),
+                                show=True)
 
         text_formats = []
         # convert_options = ' -v -v –enable-heuristics '
@@ -520,72 +513,151 @@ class TextDiffDialog(QDialog):
         # --sr1-search
         # Suchmuster (regulärer Ausdruck), das durch "sr1-replace" ersetzt werden soll.
 
-        for filtered_path in filtered_paths:
+        text_lines = []  # List of text lines for each converted format
+        for book_format_info in book_formats_info:
+            # [(285, 'eister Antifers wunderbare Abenteuer', 'EPUB', 'E:\\Bibliotheken\\Abenteuer\\Jules Verne\\Meister Antifers wunderbare Abenteu (285)\\Meister Antifers wunderbare Abe - Jules Verne.epub'),
             # Convert the input format to text format, even if format is already TXT to apply convert options
-            result = self.ebook_convert(filtered_path, convert_options)
-            print('result={0}'.format(result))
-            qualifier = str(result[0])
-            txt_format_path = str(result[1])
-            text_formats.append(txt_format_path)
+            # The function returns a list of strings
+            text_lines.append(self.ebook_convert(book_format_info, convert_options))
+            print('First 10 text lines: {0}'.format(text_lines[:10]))
 
-        print('text_formats={0}'.format(text_formats))
-        txt_file_path = []
-        for i, text_format in enumerate(text_formats):
-            txt_file_path.append(Path(text_format))
+        print('Format conversion finished. Beginning compare...')
+        self.gui.status_bar.showMessage(_('Format conversion finished. Beginning compare...'))
 
-        # Qualify diff file with book id(s)
-        # ToDo: Generate diff_file only when appropiate button is pressed.
-        # if os.path.exists(diff_file):
-        #     os.remove(diff_file)
-        diff_file = Path(os.path.dirname(os.path.abspath(txt_file_path[0])) + '\\diff_file' + qualifier + '.html')
-        print('txt_file_path[0]=' + txt_file_path[0].name)
-        print('txt_file_path[1]=' + txt_file_path[1].name)
-        print('diff_file=' + diff_file.name)
+        diff_options = {}
+        diff_options['difftype'] = str(self.compare_output_combo.currentText()).upper()  # HTML, UNIFIED, CONTEXT
+        diff_options['context'] = self.context.isChecked()  # True or False
+        diff_options['numlines'] = int(self.numlines.text())  # default 3
+        diff_options['ratio'] = self.calculate_ratio.isChecked()  # Default False
+        # HtmlDiff.make_table: context=False, numlines=5
+        # context_diff: numlines=3
+        # unified_diff: numlines=3
+        # ndiff: linejunk=None, charjunk=IS_CHARACTER_JUNK)
+        # SequenceMatcher: ratio
 
-        # ToDo: Fenster in den Vordergrund bringen
+        result = self.create_diff(text_lines, book_formats_info, diff_options)
+        self.diff = result[0]
+        self.diff_strict = result[1]
+        ratio = result[2]
+        if ratio is not None:
+            self.ratio.setText(str(ratio))
 
-        print('Beginning compare...')
-        self.gui.status_bar.showMessage(_('Beginning compare...'))
+        # Show diff result in GUI
 
-        # delta = self.create_diff(txt_file_path[0], txt_file_path[1], diff_file, diff_options)
-        
-        # ToDo: move code to function and activate call
-        # https://docs.python.org/3/library/difflib.html
+        # ToDo: Check:
+        #             if context:
+        #                 fromlist = ['<td></td><td>&nbsp;No Differences Found&nbsp;</td>']
+        #                 tolist = fromlist
+        #             else:
+        #                 fromlist = tolist = ['<td></td><td>&nbsp;Empty File&nbsp;</td>']
+
+
+        self.text_browser.clear()
+        if '<td>&nbsp;No Differences Found&nbsp;</td>' in self.diff or ratio == 1.0:
+            self.text_browser.setPlainText(
+                _('No differences found in text. However, there may be differences in formatting or MIME content.'))
+        elif diff_options['difftype'] == 'HTML':
+            if self.hide_equals.isChecked():
+                self.text_browser.setHtml(self.diff_strict)
+            else:
+                self.text_browser.setHtml(self.diff)
+        elif diff_options['difftype'] == 'UNIFIED':
+            self.text_browser.setPlainText(self.diff)
+        else:
+            self.text_browser.setPlainText(_('Unknown difftype or result:\\n') + self.diff)
+
+
+    def remove_soft_hyphens(self, input_file, output_file, options):
+        # ToDo: Remove soft hyphens
+        # ebook-polish [options] input_file [output_file]
+        # --remove-soft-hyphens
+        pass
+
+
+    def ebook_convert(self, book_format_info, convert_options):
+        # Convert the input format to text format, even if format is already TXT to apply convert options
+
+        # Kovid says:
+        # If you want to extract text the easiest way to do it is to convert to txt.
+        # You basically need to run the input format plugin on the file, then you can use
+        # calibre.ebooks.oeb.polish.container.Container object to access the contents of the result
+        # of running the input format plugin
+
+        print('book_format_info={0}'.format(book_format_info))
+
+        # Generate a path for the text file
+        txt_format_path = self.get_txt_format_path(book_format_info)
+        print('txt_format_path={0}'.format(txt_format_path))
+
+        # ToDo: Remove soft hyphens in input file?
+        # self.remove_soft_hyphens(input_file, output_file, options)
+
+        print('Starting ebook-convert...')
+        self.gui.status_bar.showMessage(_('Starting ebook-convert...'))
+
+        # Remove any old file
+        if os.path.exists(txt_format_path):
+            os.remove(txt_format_path)
+
+        os.system('ebook-convert ' + '"' + book_format_info[3] + '"' + ' "' +
+                  txt_format_path + '"' + convert_options)
 
         # "readlines" returns a list containing the lines.
-
-        txt_file_content = [None, None]
-        for i in range(2):
-            if os.path.exists(txt_file_path[i]):
-                print('Reading file {0} in list...'.format(i + 1))
-                with open(txt_file_path[i]) as f:
-                    # Get rid of empty lines
-                    # If you use the None as a function argument, the filter method will remove any element
-                    # from the iterable that it considers to be false.
-                    txt_file_content[i] = list(filter(None, (line.rstrip() for line in f)))
-                print('File {0} has {1} lines.'.format(i + 1, len(txt_file_content[i])))
-                print('The first 10 items are:')
-                print(txt_file_content[i][:10])
-                # txt_file_content[i] = open(txt_file_path[i]).readlines()
-            else:
-                return error_dialog(self.gui, _('TextDiff plugin'),
-                                    _('The file {0} don\'t exist. Probably conversion to text format failed.'.format(txt_file_path[i])),
-                                    show=True)
-
         # with open(txt_file_path[0]) as f:
         #     txt_file_content[0] = list(line for line in (l.strip() for l in f) if line)
         # with open(txt_file_path[1]) as f:
         #     txt_file_content[1] = list(line for line in (l.strip() for l in f) if line)
+        if os.path.exists(txt_format_path):
+            print('Reading {0} content in list...'.format(txt_format_path))
+            with open(txt_format_path) as f:
+                # Read text file line by line and get rid of empty lines
+                # If you use the None as a function argument, the filter method will remove any element
+                # from the iterable that it considers to be false.
+                txt_file_content = list(filter(None, (line.rstrip() for line in f)))
+            print('File {0} has {1} lines.'.format(txt_format_path, len(txt_file_content)))
+            print('The first 10 items are: {0}'.format(txt_file_content[:10]))
+        else:
+            return error_dialog(self.gui, _('TextDiff plugin'),
+                                _('The file {0} don\'t exist. Probably conversion to text format failed.'.format(txt_format_path)),
+                                show=True)
 
-        # ToDo: code nach folgendem call in create_diff auslagern:
-        #delta = self.create_diff(txt_file_path[0], txt_file_path[1], diff_file)
+        # Delete the generated text file
+        print('Deleting temp file...')
+        if os.path.exists(txt_format_path):
+            os.remove(txt_format_path)
+
+        return txt_file_content
+
+
+    def create_diff(self, text_lines, book_formats_info, diff_options):
 
         # https://docs.python.org/3/library/difflib.html
+
+        diff = None
+
         # ToDo: wrapcolumn, linejunk, charjunk as parm
         print('Instantiate HtmlDiff...')
         d = difflib.HtmlDiff(tabsize=4, wrapcolumn=60, linejunk=None, charjunk=TextDiffDialog.IS_CHARACTER_JUNK)
 
-        if str(self.compare_output_combo.currentText()).upper() == 'HTML':
+        # Calculate ratio?
+        ratio = None
+        if diff_options['ratio']:
+            # First argument is a function to return 'junk':
+            # lambda x: x == ' ' ignores blanks
+            ratio = difflib.SequenceMatcher(None, text_lines[0], text_lines[1]).ratio()
+        print('ratio={0}'.format(ratio))
+
+        # html_diff and context: numlines=5
+        # context_diff: numlines=3
+        # unified_diff: numlines=3
+        # ndiff: linejunk=None, charjunk=IS_CHARACTER_JUNK)
+        # SequenceMatcher: ratio
+
+        txt_format_paths = []
+        for book_format_info in book_formats_info:
+            txt_format_paths.append(self.get_txt_format_path(book_format_info))
+
+        if diff_options['difftype'] == 'HTML':
 
             # Overwrite Difflib table and file templates (remove legend and modernize html and css)
             d._table_template = self.table_template
@@ -618,222 +690,143 @@ class TextDiffDialog(QDialog):
             #         charset -- charset of the HTML document
             #         """
 
-            # ToDo: ggf.nur make_table verwenden:
+            print('Calling HtmlDiff.make_table...')
+
             # make_table(fromlines, tolines, fromdesc='', todesc='', context=False, numlines=5)
             # Compares fromlines and tolines (lists of strings) and returns a string which is a complete HTML table showing line by line differences with inter-line and intra-line changes highlighted.
             # The arguments for this method are the same as those for the make_file() method
+            # The table can be generated in either full or contextual difference mode
+            # showing line by line differences with inter-line and intra-line changes highlighted.
 
-            print('Calling HtmlDiff.make_file...')
-            # ToDO: Muss weiter nach unten!!!
-            #  kein make_file, nur noch make_table, bei html bzw. unified_diff
-            delta = d.make_file(txt_file_content[0], txt_file_content[1], txt_file_path[0].name, txt_file_path[1].name,
-                                context=self.context_diff.isChecked(), numlines=int(self.numlines.text()), charset='utf-8')
-            # difflöib.HmlDiff.__init__()
+            book_attributes = []
+            for book_format_info in book_formats_info:
+                book_attributes.append(str(book_format_info[0]) + '-' + book_format_info[1] + '-' + book_format_info[2])
 
-            # d = difflib.HtmlDiff()#wrapcolumn=10)
-            # html = d.make_file(lines1, lines2)
-            # delta = difflib.HtmlDiff().make_table(txt_file_content[0], txt_file_content[1], txt_file_path[0].name, txt_file_path[1].name)
-            # ToDo: Direkt speichern geht nicht. delta ist bei make_table ein generator!!!!!!!!!!!
+            # Compares fromlines and tolines (lists of strings) and returns a string which is a complete HTML table
+            # showing line by line differences with inter-line and intra-line changes highlighted.
+            diff = d.make_table(text_lines[0], text_lines[1], book_attributes[0], book_attributes[1],
+                                context=diff_options['context'], numlines=diff_options['numlines'])\
+            # nur für make_file: charset='utf-8'
 
-            print('Compare finished, delta[:2000]=' + delta[:2000])
-            self.gui.status_bar.showMessage(_('Compare finished.'))
+            print('Diff finished, diff[:1000] + diff[-200:]=' + diff[:1000] + diff[-200:])
+            self.gui.status_bar.showMessage(_('Diff finished.'))
 
-            # ToDo: ggf. make_table verwenden:
-            # make_table(fromlines, tolines, fromdesc='', todesc='', context=False, numlines=5)
-            # Compares fromlines and tolines (lists of strings) and returns a string which is a complete HTML table showing line by line differences with inter-line and intra-line changes highlighted.
-            # The arguments for this method are the same as those for the make_file() method
+            # Wrap html around diff table
+            table_soup = BeautifulSoup(diff, 'lxml')
+            # tag = soup.find('table')
+            # tag.insert_before(self.before_table_template)
+            # tag.insert_after(self.after_table_template)
+            # print('HTML added, diff begin=' + diff[:200])
+            # print('...')
+            # print('HTML added, diff end=' + diff[-200:])
+            diff = self.before_table_template + diff + self.after_table_template
 
-            # ToDo: Fortschrittsanzeige
+            # Make a shadow table without equal lines
 
-            # Show Diff in GUI
-
-            # Check if differences found
+            # Row with no differences:
             # <tr>
-            # <td class="diff_next"><a href="#difflib_chg_to2__top">t</a></td>
-            # <td></td>
-            # <td>&nbsp;No Differences Found&nbsp;</td>
-            # <td class="diff_next"><a href="#difflib_chg_to2__top">t</a></td>
-            # <td></td>
-            # <td>&nbsp;No Differences Found&nbsp;</td>
+            # <td class="diff_next"></td>
+            # <td class="diff_header" id="from0_5">5</td>
+            # <td nowrap="nowrap">„Warum&nbsp;hast&nbsp;du&nbsp;vier&nbsp;Arme&nbsp;und&nbsp;ich&nbsp;nur&nbsp;zwei?“</td>
+            # <td class="diff_next"></td>
+            # <td class="diff_header" id="to0_21">21</td>
+            # <td nowrap="nowrap">„Warum&nbsp;hast&nbsp;du&nbsp;vier&nbsp;Arme&nbsp;und&nbsp;ich&nbsp;nur&nbsp;zwei?“</td>
+            # </tr>
+            # Row with difference:
+            # <tr>
+            # <td class="diff_next"></td>
+            # <td class="diff_header"></td>
+            # <td nowrap="nowrap">&nbsp;</td>
+            # <td class="diff_next"></td>
+            # <td class="diff_header"></td>
+            # <td nowrap="nowrap"><span class="diff_add">en&nbsp;Fähigkeiten&nbsp;unseres&nbsp;Unterbewußtseins&nbsp;die&nbsp;Rede&nbsp;sein.)</span></td>
             # </tr>
 
-            # ToDo: delta in Abhängigkeit von compare_output_combo ermitteln, und dann erst den output prüfen!
-            if '<td>&nbsp;No Differences Found&nbsp;</td>' in delta:
-                self.result_text.setPlainText(_('No differences found in text. However, there may be differences in formatting or MIME content.'))
-
+            # Here we go: Find all rows without a inner span tag:
+            diff_list = []
+            # build a list of different rows
+            for span in table_soup.find_all('span'):
+                tr = span.find_parent('tr')
+                diff_list.append(tr)
+            if len(diff_list) == 0:
+                print(_('diff list is empty - no differences found!'))
+                diff_strict = self.before_table_template + \
+                              '<tr>><td>' + _('No differences found!') + '</td></tr>' + \
+                              self.after_table_template
             else:
+                print('First 10 entries in diff_list:{0}'.format(diff_list[:10]))
+                print_equals = True
+                for tr in table_soup.find_all('tr'):
+                    if tr not in diff_list:
+                        if print_equals:
+                            print('tr not in diff_list: assuming equal lines:{0}'.format(tr))
+                            print_equals = False
+                        table_soup.extract()
+                print('table_soup[:200]:{0}'.format(table_soup[:200]))
+                diff_strict = self.before_table_template + str(table_soup) + self.after_table_template
 
-                # Remove colspan:
-                # <thead><tr>
-                # <th class="diff_next"><br /></th><th colspan="2" class="diff_header">(left file path)</th>
-                # <th class="diff_next"><br /></th><th colspan="2" class="diff_header">(right file path)</th>
-                # </tr></thead>
-                # thead = etree.HTML(delta).find("body/table/thead/tr")
-                # thead.set('<th colspan="2" class="diff_header">',
-                #           '<th class="diff_header"></th> <th class="diff_header"></th>')
-
-                # ToDo: keine Block-Tabelle bauen, sondern zwei Versionen der html-Tabelle!
-                # Build <tbody><tr><td> list for hide/unhide equal blocks in text browser
-                # table = etree.HTML(delta).find("body/table/tbody")
-                # rows = iter(table)
-                # headers = [col.text for col in next(rows)]
-                # diff_rows = ['class="diff_add">', 'class="diff_sub">', 'class="diff_chg">']
-                # equal_rows = []
-                # row_no = 0
-                # for row in rows:
-                #     print('row[:200]={0}'.format(tostring(row)[:200]))
-                #     row_no = row_no + 1
-                #     # add row number to equal rows list, wenn not in rows with differences:
-                #     # if any(diff_str in row.iter() for diff_str in diff_rows):
-                #     if any(diff_str in row for diff_str in diff_rows):
-                #         print('Row with differences - row[:200]={0}'.format(tostring(row.text)[:200]))
-                #         continue
-                #     print('Row without differences - row[:200]={0}'.format(tostring(row.text)[:200]))
-                #     equal_rows.append(row_no)
-                # print('equal_rows={0}'.format(equal_rows))
-
-                # self write_diff_file(diff_file, delta)
-                with open(diff_file, 'w') as f:
-                    f.write(delta)
-                    # Show Diff in GUI
-                    # with open(diff_file, 'r') as f:
-                    #     self.result_text.clear()
-                    #     self.result_text.setHtml(f.read())
-                    # ToDo: Schreiben erst wenn "Speichern"-Button gedrückt?
-                    #  (Dann direkt diff_file in text_browser kippen)
-                    with open(diff_file, 'r') as f:
-                        # self.text_browser.setSource(QtCore.QUrl.fromLocalFile(diff_file))
-                        self.text_browser.clear()
-                        self.text_browser.insertHtml(f.read())
-
-                # self.result_text.setHtml(delta)
-
-                # doc = self.result_text.document()
-                doc = self.text_browser.document()
-                # Check if equal lines are to suppressed
-                if self.hide_equals.isChecked():
-                    for blockIndex in range(doc.blockCount()):
-                        # for blockIndex in range(100):
-                        block = doc.findBlockByNumber(blockIndex)
-                        # DEBUG: Print the first 600 blcks (100 rows in html output)
-                        if block.blockNumber() < 600:
-                            print('Block # {0} has a lengt of {1}:'.format(block.blockNumber(), block.length()))
-                            print('The text content is: {0}'.format(block.text()))
-                        # check if block is in equal_rows list (ignore 4 block for header)
-                        if math.ceil((block.blockNumber() - 4) / 6) in equal_rows:
-                            block.setVisible(False)
-
-        elif str(self.compare_output_combo.currentText()).upper() == 'UNIFIED':
-            delta = difflib.unified_diff(txt_file_content[0], txt_file_content[1], txt_file_path[0].name, txt_file_path[1].name)
+        elif diff_options['difftype'] == 'UNIFIED':
+            diff = difflib.unified_diff(text_lines[0], text_lines[1], book_formats_info[0][1], book_formats_info[1][1])
             text = ''
             newline = '\n'
-            for line in delta:
+            for line in diff:
                 text += line
                 # Work around missing newline (http://bugs.python.org/issue2142).
                 if text and not line.endswith(newline):
                     text += newline
-            print('delta=' + text[:800])
-            # Show Diff in GUI
-            self.result_text.clear()
-            self.result_text.setPlainText(text)
+            print('diff=' + text[:800])
 
         else:
-            self.result_text.clear()
-            self.result_text.setPlainText(_('Unknown compare output option!'))
+            diff = (_('Unknown compare option!'))
 
-        # Delete the generated files
-        print('Deleting temp files...')
-        if os.path.exists(text_formats[0]):
-            os.remove(text_formats[0])
-        if os.path.exists(text_formats[1]):
-            os.remove(text_formats[1])
-        # if os.path.exists(diff_file):
-        #     os.remove(diff_file)
-
-        return
+        return diff, diff_strict, ratio
 
 
-    def remove_soft_hyphens(self, input_file, output_file, options):
-        # ToDo: Remove soft hyphens
-        # ebook-polish [options] input_file [output_file]
-        # --remove-soft-hyphens
-
-        pass
-
-
-    def ebook_convert(self, filtered_path, convert_options):
-        # Convert the input format to text format, even if format is already TXT to apply convert options
-        qualifier = ''  # ToDo: warum diese variable. wird eigentlich nix mit gemacht (außer zuweisung unten)
-        txt_format_path = filtered_path[2]  # path for converted text format
+    def get_txt_format_path(self, book_format_info):
+        # Generate a path for the text file
+        # [(285, 'Meister Antifers wunderbare Abenteuer', 'EPUB', 'E:\\Bibliotheken\\Abenteuer\\Jules Verne\\Meister Antifers wunderbare Abenteu (285)\\Meister Antifers wunderbare Abe - Jules Verne.epub'),
+        book_id = book_format_info[0]
+        book_title = book_format_info[1]
+        book_format = book_format_info[2]
+        book_format_path = book_format_info[3]
+        txt_format_path = book_format_path  # path for converted text format
         txt_format_path = '_'.join(txt_format_path.rsplit('.', 1))
-        txt_format_path = txt_format_path + '_' + str(filtered_path[0])  # Qualify text file name with book_id
-        qualifier = qualifier + '_' + str(filtered_path[0])
+        txt_format_path = txt_format_path + '_' + str(book_id)  # Qualify text file name with book_id
         txt_format_path = txt_format_path + '.txt'  # path for converted text format
         print('txt_format_path={0}'.format(txt_format_path))
-
-        # self.remove_soft_hyphens(input_file, output_file, options)
-
-        print('Starting ebook-convert...')
-        self.gui.status_bar.showMessage(_('Starting ebook-convert...'))
-        # Remove any old file
-        if os.path.exists(txt_format_path):
-            os.remove(txt_format_path)
-
-        os.system('ebook-convert ' + '"' + filtered_path[2] + '"' + ' "' +
-                  txt_format_path + '"' +
-                  convert_options)
-
-        return qualifier, txt_format_path
+        return txt_format_path
 
 
-    def create_diff(self, txt_file_path: Path, diff_file: Path = None):
-
-        delta = None
-
-
-
+    def copy_diff_file(self):
+        # paste entire text in compare result to clipboard
+        txt = self.text_browser.selectAll()
+        QApplication.clipboard().setText(txt)
 
 
-
-        # # https://docs.python.org/3/library/difflib.html
-        #
-        # print('txt_file_path[0]=' + txt_file_path[0].name)
-        # print('txt_file_path[1]=' + txt_file_path[1].name)
-        # txt_file_content[0] = open(txt_file_path[0]).readlines()
-        # txt_file_content[1] = open(txt_file_path[1]).readlines()
-        #
-        # print('Beginning compare...')
-        # self.gui.status_bar.showMessage(_('Starting compare...'))
-        #
-        # if str(self.compare_output_combo.currentText()).upper() == 'HTML':
-        #
-        #     delta = difflib.HtmlDiff().make_file(txt_file_content[0], txt_file_content[1], txt_file_path[0].name, txt_file_path[1].name)
-        #
-        #     # ToDo: ggf. make_table verwenden:
-        #     # make_table(fromlines, tolines, fromdesc='', todesc='', context=False, numlines=5)
-        #     # Compares fromlines and tolines (lists of strings) and returns a string which is a complete HTML table showing line by line differences with inter-line and intra-line changes highlighted.
-        #     # The arguments for this method are the same as those for the make_file() method
-        #
-        #     # ToDo: Fortschrittsanzeige
-        #
-        #     with open(diff_file, "w") as f:
-        #         f.write(delta)
-        # elif str(self.compare_output_combo.currentText()).upper() == 'UNIFIED':
-        #     delta = difflib.unified_diff(txt_file_content[0], txt_file_content[1], txt_file_path[0].name, txt_file_path[1].name)
-        #     sys.stdout.writelines(delta)
-        # else:
-        #     delta = None
-
-        return delta
-
-
-    def save_diff_file(self, diff_file, delta):
+    def save_diff_file(self):
         # Schreiben erst wenn "Speichern"-Button gedrückt
 
-        # ToDo: HTML ergänzen, wenn htmldiff mit table_diff  (delta enthält nur Tabelle)
-        with open(diff_file, 'w') as f:
-            f.write(delta)
+        # ToDo: file type html or txt
+        with open('diff_file_' + str(self.book_ids[0])  + '_' + str(self.book_ids[1]) + '.html', 'w') as f:
+            if self.hide_equals.isChecked():
+                f.write(self.diff_strict)
+            else:
+                f.write(self.diff)
 
+    def save_current_file(self):
+        # ToDo: Save as html or txt, depending on output format combo
+        if not self.file_path:
+            new_file_path, filter_type = QFileDialog.getSaveFileName(self, "Save this file as...", "",
+                                                                     "All files (*)")
+            if new_file_path:
+                self.file_path = new_file_path
+            else:
+                self.invalid_path_alert_message()
+                return False
+        file_contents = self.scrollable_text_area.toPlainText()
+        with open(self.file_path, "w") as f:
+            f.write(file_contents)
+        self.title.setText(self.file_path)
 
     def get_book_info_from_book_id(self, book_id):
         book = {}
