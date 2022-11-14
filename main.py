@@ -235,7 +235,6 @@ class TextDiffDialog(QDialog):
         self.wrapcolumn.setMaxLength(2)
         self.wrapcolumn.setText('60')
         self.wrapcolumn.setToolTip('Specify column number where lines are broken and wrapped. 0 for not to break.')
-        # ToDo: Beim Eintragen in diff_options 0 zu None umsetzen
 
         self.compare_button = QPushButton(_('Compare'), self)
         self.compare_button.clicked.connect(self.compare)
@@ -274,22 +273,32 @@ class TextDiffDialog(QDialog):
         self.grid_layout.addWidget(self.txt_file_content_combo_1, 2, 1, 1, 1)
         # row 3
         self.grid_layout.addWidget(self.refresh_formats_button, 3, 0, 1, 2)
-        # row 4
-        self.grid_layout.addWidget(self.compare_output_label, 4, 0, 1, 1)
-        self.grid_layout.addWidget(self.compare_output_combo, 4, 1, 1, 1)
-        # row 5: entfällt
-        # row 6:
-        # Only for HtmlDiff
-        self.grid_layout.addWidget(self.context, 6, 1, 1, 1)
-        # row 7
-        self.grid_layout.addWidget(self.numlines_label, 7, 0, 1, 1)
-        self.grid_layout.addWidget(self.numlines, 7, 1, 1, 1)
-        # row 8
 
+        # Rows 4 to 6 with 4 widgets each wrapped in horizontal box format
+        # row 4
+        self.option_box1 = QHBoxLayout()
+        self.option_box1.addWidget(self.compare_output_label)
+        self.option_box1.addWidget(self.compare_output_combo)
+        self.option_box1.addWidget(self.fontfamily_label)
+        self.option_box1.addWidget(self.fontfamily_combo)
+        self.grid_layout.addLayout(self.option_box1, 4, 0, 1, 2)
+        # row 5:
+        self.option_box2= QHBoxLayout()
+        self.option_box2.addWidget(self.context)   # Only for HtmlDiff
+        self.option_box2.addWidget(self.numlines_label)
+        self.option_box2.addWidget(self.numlines)
+        self.grid_layout.addLayout(self.option_box2, 5, 0, 1, 2)
+        # row 6
+        self.option_box3= QHBoxLayout()
+        self.option_box3.addWidget(self.tabsize_label)
+        self.option_box3.addWidget(self.tabsize)
+        self.option_box3.addWidget(self.wrapcolumn_label)
+        self.option_box3.addWidget(self.wrapcolumn)
+        self.grid_layout.addLayout(self.option_box3, 6, 0, 1, 2)
+        # row 7
+        self.grid_layout.addWidget(self.compare_button, 7, 0, 1, 2)
         # row 9
-        self.grid_layout.addWidget(self.compare_button, 9, 0, 1, 2)
         # row 10
-        # self.grid_layout.addWidget(self.hide_equals, 10, 0, 1, 1)
         self.grid_layout.addWidget(self.ratio_label, 10, 0, 1, 1)
         self.grid_layout.addWidget(self.ratio, 10, 1, 1, 1)
         # row 11
@@ -358,6 +367,8 @@ class TextDiffDialog(QDialog):
             self.numlines.setEnabled(False)
         else:
             self.numlines.setEnabled(True)
+        if 'HTMLDIFF' not in value:
+            self.fontfamily_combo.setCurrentText('monospace')
 
 
     def sizeHint(self):
@@ -563,9 +574,11 @@ class TextDiffDialog(QDialog):
         diff_options['difftype'] = str(self.compare_output_combo.currentText()).upper()  # HTML, UNIFIED, CONTEXT, NDIFF
         diff_options['context'] = self.context.isChecked()  # True or False. Only for HtmlDiff
         diff_options['numlines'] = int(self.numlines.text())  # default 3
-        diff_options['tabsize'] = 4
-        diff_options['wrapcolumn'] = 60
-        diff_options['font'] = 'sans-serif'  # 'serif', 'monospace', 'system-ui', 'ui-serif, 'ui-sans-serif', 'ui-monospace'
+        diff_options['tabsize'] = int(self.tabsize.text())
+        diff_options['wrapcolumn'] = int(self.wrapcolumn.text())
+        if diff_options['wrapcolumn'] == 0:
+            diff_options['wrapcolumn'] = 'None'
+        diff_options['font'] = str(self.fontfamily_combo.currentText())
         # ToDo: tabsize=4, wrapcolumn=60
         # HtmlDiff.make_table: context=False, numlines=5
         # context_diff: numlines=3
@@ -602,9 +615,9 @@ class TextDiffDialog(QDialog):
             #     self.text_browser.setHtml(self.diff)
             self.text_browser.setHtml(self.diff)
         elif diff_options['difftype'] == 'CONTEXT':
-            self.text_browser.setPlainText(_('Not implemented yet)'))
+            self.text_browser.setPlainText(_('Not implemented yet'))
         elif diff_options['difftype'] == 'NDIFF':
-            self.text_browser.setPlainText(_('Not implemented yet)'))
+            self.text_browser.setPlainText(_('Not implemented yet'))
         elif diff_options['difftype'] == 'UNIFIED':
             # unified_diff returns a gerator, but is already converted to string in make_diff function
             self.text_browser.setPlainText(self.diff)
@@ -676,7 +689,8 @@ class TextDiffDialog(QDialog):
 
     def create_diff(self, text_lines, book_formats_info, diff_options):
 
-        # https://docs.python.org/3/library/difflib.html
+        print('Enter create_diff...')
+        print('diff_options={0}'.format(diff_options))
 
         diff = None
         # diff_strict = None
@@ -686,6 +700,7 @@ class TextDiffDialog(QDialog):
         # First argument is a function to return 'junk':
         # lambda x: x == ' ' ignores blanks
         ratio = difflib.SequenceMatcher(None, text_lines[0], text_lines[1]).ratio()
+        ratio = round(ratio, 4)
         print('ratio={0}'.format(ratio))
 
         # html_diff and context: numlines=5
@@ -698,6 +713,7 @@ class TextDiffDialog(QDialog):
         for book_format_info in book_formats_info:
             txt_format_paths.append(self.get_txt_format_path(book_format_info))
 
+        # https://docs.python.org/3/library/difflib.html
         if diff_options['difftype'] == 'HTML':
 
             # ToDo: wrapcolumn, linejunk, charjunk as parm
@@ -713,6 +729,7 @@ class TextDiffDialog(QDialog):
             d._table_template = self.table_template
             d._file_template = self.file_template
             d._styles = self.styles
+            d._styles.replace('sans-serif', diff_options['font'])
 
             #     """For producing HTML side by side comparison with change highlights.
             #     This class can be used to create an HTML table (or a complete HTML file
@@ -775,13 +792,7 @@ class TextDiffDialog(QDialog):
             self.gui.status_bar.showMessage(_('Diff finished.'))
 
             # Wrap html around diff table
-            table_soup = BeautifulSoup(diff, 'lxml')
-            # tag = soup.find('table')
-            # tag.insert_before(self.before_table_template)
-            # tag.insert_after(self.after_table_template)
-            # print('HTML added, diff begin=' + diff[:200])
-            # print('...')
-            # print('HTML added, diff end=' + diff[-200:])
+            diff_table = diff
             diff = self.before_table_template + diff + self.after_table_template
 
             # Make a shadow table with differences
@@ -807,6 +818,7 @@ class TextDiffDialog(QDialog):
 
             # Here we go: Find all rows without a inner span tag:
             diff_list = []
+            table_soup = BeautifulSoup(diff_table, 'lxml')
             # build a list of different rows
             for span in table_soup.find_all('span'):
                 tr = span.find_parent('tr')
@@ -830,21 +842,21 @@ class TextDiffDialog(QDialog):
                 # print('table_soup[:2000]:{0}'.format(str(table_soup)[:2000]))
                 # diff_strict = self.before_table_template + str(table_soup) + self.after_table_template
 
-            elif diff_options['difftype'] == 'CONTEXT':
-                # Compare a and b (lists of strings); return a delta (a generator generating the delta lines)
-                # in context diff format.
-                # Context diffs are a compact way of showing just the lines that have changed plus a few lines
-                # of context. The changes are shown in a before/after style. The number of context lines is set
-                # by n which defaults to three.
-                # difflib.context_diff(a, b, fromfile='', tofile='', fromfiledate='', tofiledate='', n=3, lineterm='\n')
-                pass  # ToDo
+        elif diff_options['difftype'] == 'CONTEXT':
+            # Compare a and b (lists of strings); return a delta (a generator generating the delta lines)
+            # in context diff format.
+            # Context diffs are a compact way of showing just the lines that have changed plus a few lines
+            # of context. The changes are shown in a before/after style. The number of context lines is set
+            # by n which defaults to three.
+            # difflib.context_diff(a, b, fromfile='', tofile='', fromfiledate='', tofiledate='', n=3, lineterm='\n')
+            pass  # ToDo
 
-            elif diff_options['difftype'] == 'NDIFF':
-                # difflib.ndiff(a, b, linejunk=None, charjunk=IS_CHARACTER_JUNK)
-                pass  # ToDo
+        elif diff_options['difftype'] == 'NDIFF':
+            # difflib.ndiff(a, b, linejunk=None, charjunk=IS_CHARACTER_JUNK)
+            pass  # ToDo
 
-            elif diff_options['difftype'] == 'UNIFIED':
-                diff = difflib.unified_diff(text_lines[0], text_lines[1], book_formats_info[0][1], book_formats_info[1][1])
+        elif diff_options['difftype'] == 'UNIFIED':
+            diff = difflib.unified_diff(text_lines[0], text_lines[1], book_formats_info[0][1], book_formats_info[1][1])
             text = ''
             newline = '\n'
             for line in diff:
