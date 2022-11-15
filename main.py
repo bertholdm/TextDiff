@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup
 from PyQt5.QtCore import Qt
 from PyQt5.Qt import (QDialog, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QFont, QGridLayout, QSize,
                       QTextEdit, QComboBox, QCheckBox, QPushButton, QTabWidget, QScrollArea, QMessageBox, QMainWindow,
-                      QApplication, QClipboard, QTextBlock, QTextBrowser, QIntValidator)  # QDocument,
+                      QApplication, QClipboard, QTextBlock, QTextBrowser, QIntValidator, QFileDialog)  # QDocument,
 
 from calibre.gui2 import gprefs, error_dialog, info_dialog
 from calibre.ebooks.conversion.config import (get_input_format_for_book, sort_formats_by_preference)
@@ -942,20 +942,19 @@ class TextDiffDialog(QDialog):
     def save_diff_file(self):
         # Schreiben erst wenn "Speichern"-Button gedrückt
 
+        dialog = QFileDialog(self)
+        dialog.setFileMode(QFileDialog.FileMode.AnyFile)
+        dialog.setViewMode(QFileDialog.Detail)
+
         file_name = 'diff_file_' + str(self.book_ids[0])  + '_' + str(self.book_ids[1])
         if self.compare_output_combo.currentText() == 'HTML':
             file_name = file_name + '.htnl'
+            dialog.setNameFilter(_("HTML file (*.html"))
         else:
             file_name = file_name + '.txt'
+            dialog.setNameFilter("Text (*.txt)")
 
-        with open(file_name, 'w') as f:
-            # if self.hide_equals.isChecked():
-            #     f.write(self.diff_strict)
-            # else:
-            #     f.write(self.diff)
-            f.write(self.diff)
-
-        file_path = QtGui.QFileDialog.getSaveFileName(None, 'Save File', file_name)
+        file_path = dialog.getSaveFileName(None, _('Save File'), file_name)
         file = open(file_path, 'w')
         file.write(self.diff)
         file.close()
