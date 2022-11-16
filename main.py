@@ -589,12 +589,9 @@ class TextDiffDialog(QDialog):
         if diff_options['wrapcolumn'] == 0:
             diff_options['wrapcolumn'] = 'None'
         diff_options['font'] = str(self.fontfamily_combo.currentText())
-        # ToDo: tabsize=4, wrapcolumn=60
-        # HtmlDiff.make_table: context=False, numlines=5
-        # context_diff: numlines=3
-        # unified_diff: numlines=3
+        # HtmlDiff: context=False, numlines=5
+        # context_diff, unified_diff, ndiff: numlines=3
         # ndiff: linejunk=None, charjunk=IS_CHARACTER_JUNK)
-        # SequenceMatcher: ratio
 
         result = self.create_diff(text_lines, book_formats_info, diff_options)
         self.diff = result[0]
@@ -942,22 +939,30 @@ class TextDiffDialog(QDialog):
     def save_diff_file(self):
         # Schreiben erst wenn "Speichern"-Button gedrückt
 
-        dialog = QFileDialog(self)
+        dialog = QFileDialog(self.gui)
         dialog.setFileMode(QFileDialog.FileMode.AnyFile)
-        dialog.setViewMode(QFileDialog.Detail)
+        # dialog.setViewMode(QFileDialog.Detail)
 
         file_name = 'diff_file_' + str(self.book_ids[0])  + '_' + str(self.book_ids[1])
         if self.compare_output_combo.currentText() == 'HTML':
-            file_name = file_name + '.htnl'
-            dialog.setNameFilter(_("HTML file (*.html"))
+            # file_name = file_name + '.htnl'
+            dialog.setNameFilter(_('HTML file (*.html)'))
+            options = _('HTML file (*.html)')
         else:
-            file_name = file_name + '.txt'
-            dialog.setNameFilter("Text (*.txt)")
+            # file_name = file_name + '.txt'
+            dialog.setNameFilter(_('Text (*.txt)'))
+            options = _('Text (*.txt)')
 
-        file_path = dialog.getSaveFileName(None, _('Save File'), file_name)
-        file = open(file_path, 'w')
-        file.write(self.diff)
-        file.close()
+        print('file_name={0}'.format(file_name))
+        print('options={0}'.format(options))
+        # selectedFilter='',
+        # file_path = dialog.getSaveFileName(parent=self.gui, caption=_('Save File'), dir=file_name, options=options)
+        file_path = dialog.getSaveFileName(self.gui, _('Save File'), file_name, options)
+        print('file_path={0}'.format(file_path))
+        # file_path=('H:/Programmierung/Python/calibre_plugins/TextDiff/diff_file_5429_9166.htnl.html', 'HTML file (*.html)')
+        # file_path = Path(file_path[0])
+        with open(file_path[0], 'w') as f:
+            f.write(self.diff)
 
 
     def add_book(self):
