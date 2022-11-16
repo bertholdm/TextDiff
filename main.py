@@ -609,7 +609,7 @@ class TextDiffDialog(QDialog):
 
         if ratio == 1.0:
             self.text_browser.setPlainText(
-                _('No differences found in text. However, there may be differences in formatting or MIME content.'))
+                _('No differences found in text. However, there may be differences in metadata, formatting or MIME content.'))
         else:
 
             if 'HTMLDIFF' not in diff_options['difftype']:
@@ -634,6 +634,8 @@ class TextDiffDialog(QDialog):
                 self.text_browser.setPlainText(self.diff)
             else:
                 self.text_browser.setPlainText(_('Unknown difftype or result:\\n') + self.diff)
+
+        self.gui.activateWindow()  # Bring window in front
 
 
     def remove_soft_hyphens(self, input_file, output_file, options):
