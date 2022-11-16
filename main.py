@@ -1,6 +1,7 @@
 # Die aktuelle Logik um das Benutzerinterface für einen Plugin Demo Dialog zu implementieren.
 
 import time, os, math
+from datetime import date, datetime
 from pathlib import Path
 import difflib  # https://github.com/python/cpython/blob/3.11/Lib/difflib.py
 
@@ -17,6 +18,7 @@ from calibre.ebooks.oeb.iterator import EbookIterator
 from calibre.utils.logging import Log as log
 from calibre.library import db
 from calibre.ptempfile import PersistentTemporaryFile, PersistentTemporaryDirectory
+from calibre.ebooks.covers import generate_cover
 
 from calibre_plugins.textdiff.config import prefs
 # from calibre_plugins.textdiff.ui import progressbar, show_progressbar, set_progressbar_label, \
@@ -62,12 +64,13 @@ class TextDiffDialog(QDialog):
                </tbody>
             </table>"""
 
+        # <meta http-equiv="Content-Type" content="text/html; charset=%(charset)s" />
         self.file_template =  """
         <!DOCTYPE html>
         <html>
             <head>
                 <meta http-equiv="Content-Type"
-                      content="text/html; charset=%(charset)s" />
+                      content="text/html; charset=utf-8" />
                 <title>TextDiff</title>
                 <style>%(styles)s</style>
             </head>
@@ -107,11 +110,12 @@ class TextDiffDialog(QDialog):
         .diff_sub {background-color:#ffaaaa}
         """
 
+        # <meta http-equiv="Content-Type" content="text/html; charset=%(charset)s" />
         self.before_table_template = """
         <!DOCTYPE html>
         <html>
             <head>
-                <meta http-equiv="Content-Type" content="text/html; charset=%(charset)s" />
+                <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
                 <title>TextDiff</title>
                 <style>""" + self.styles + """</style>
             </head>
@@ -601,43 +605,35 @@ class TextDiffDialog(QDialog):
             self.ratio.setText(str(ratio))
 
         # Show diff result in GUI
-
-        # ToDo: Check:
-        #             if context:
-        #                 fromlist = ['<td></td><td>&nbsp;No Differences Found&nbsp;</td>']
-        #                 tolist = fromlist
-        #             else:
-        #                 fromlist = tolist = ['<td></td><td>&nbsp;Empty File&nbsp;</td>']
-
-        # ToDo: self.hide_progressbar()
-
         self.text_browser.clear()
-        if 'HTMLDIFF' not in diff_options['difftype']:
-            font = QFont()
-            font.setFamily('monospace')
-            self.text_browser.setFont(font)
-        else:
-            font = QFont()
-            font.setFamily(self.fontfamily_combo.CurrentText())
-            self.text_browser.setFont(font)
 
-        if self.diff is None:
-            self.text_browser.setPlainText(
-                _('No diff result! Please report this.'))
-        elif '<td>&nbsp;No Differences Found&nbsp;</td>' in self.diff or ratio == 1.0:
+        if ratio == 1.0:
             self.text_browser.setPlainText(
                 _('No differences found in text. However, there may be differences in formatting or MIME content.'))
-        elif diff_options['difftype'] == 'HTML':
-            # if self.hide_equals.isChecked():
-            #     self.text_browser.setHtml(self.diff_strict)
-            # else:
-            #     self.text_browser.setHtml(self.diff)
-            self.text_browser.setHtml(self.diff)
-        elif diff_options['difftype'] in ['CONTEXT', 'NDIFF', 'UNIFIED']:
-            # context_diff, ndiff and unified_diff returns a gerator, but is already converted to string in make_diff function
-            self.text_browser.setPlainText(self.diff)
         else:
-            self.text_browser.setPlainText(_('Unknown difftype or result:\\n') + self.diff)
+
+            if 'HTMLDIFF' not in diff_options['difftype']:
+                font = QFont()
+                font.setFamily('monospace')
+                self.text_browser.setFont(font)
+            else:
+                font = QFont()
+                font.setFamily(self.fontfamily_combo.CurrentText())
+                self.text_browser.setFont(font)
+
+            if self.diff is None:
+                self.text_browser.setPlainText(
+                    _('No diff result! Please report this.'))
+            elif '<td>&nbsp;No Differences Found&nbsp;</td>' in self.diff or ratio == 1.0:
+                self.text_browser.setPlainText(
+                    _('No differences found in text. However, there may be differences in formatting or MIME content.'))
+            elif diff_options['difftype'] == 'HTML':
+                self.text_browser.setHtml(self.diff)
+            elif diff_options['difftype'] in ['CONTEXT', 'NDIFF', 'UNIFIED']:
+                # context_diff, ndiff and unified_diff returns a gerator, but is already converted to string in make_diff function
+                self.text_browser.setPlainText(self.diff)
+            else:
+                self.text_browser.setPlainText(_('Unknown difftype or result:\\n') + self.diff)
 
 
     def remove_soft_hyphens(self, input_file, output_file, options):
@@ -718,6 +714,10 @@ class TextDiffDialog(QDialog):
         ratio = round(ratio, 4)
         print('ratio={0}'.format(ratio))
 
+        if ratio == 1.0:
+            diff = _('No differences found!')
+            return diff, ratio
+
         # html_diff and context: numlines=5
         # context_diff: numlines=3
         # unified_diff: numlines=3
@@ -750,6 +750,9 @@ class TextDiffDialog(QDialog):
             styles = self.styles
             styles.replace('sans-serif', diff_options['font'])
             d._styles = styles
+            before_table_template = self.before_table_template
+            before_table_template.replace('sans-serif', diff_options['font'])
+            self.before_table_template = before_table_template
 
             #     """For producing HTML side by side comparison with change highlights.
             #     This class can be used to create an HTML table (or a complete HTML file
@@ -872,48 +875,36 @@ class TextDiffDialog(QDialog):
             diff = difflib.context_diff(text_lines[0], text_lines[1],
                                         fromfile=book_formats_info[0][1], tofile=book_formats_info[1][1],
                                         n=diff_options['numlines'], lineterm='\n')
-            text = ''
-            newline = '\n'
-            for line in diff:
-                text += line
-                # Work around missing newline (http://bugs.python.org/issue2142).
-                if text and not line.endswith(newline):
-                    text += newline
-            diff = text
-            print('diff[:1000]={0}'.format(diff[:1000]))
+            diff = self.diff_lines_to_string(diff)
 
         elif diff_options['difftype'] == 'NDIFF':
             # difflib.ndiff(a, b, linejunk=None, charjunk=IS_CHARACTER_JUNK)
             # Compare a and b (lists of strings); return a Differ-style delta (a generator generating the delta lines).
             diff = difflib.ndiff(text_lines[0], text_lines[1], linejunk=None, charjunk=TextDiffDialog.IS_CHARACTER_JUNK)
-            text = ''
-            newline = '\n'
-            for line in diff:
-                text += line
-                # Work around missing newline (http://bugs.python.org/issue2142).
-                if text and not line.endswith(newline):
-                    text += newline
-            diff = text
-            print('diff[:1000]={0}'.format(diff[:1000]))
+            diff = self.diff_lines_to_string(diff)
 
         elif diff_options['difftype'] == 'UNIFIED':
             # Compare a and b (lists of strings); return a delta (a generator generating the delta lines) in unified diff format.
             diff = difflib.unified_diff(text_lines[0], text_lines[1], book_formats_info[0][1], book_formats_info[1][1])
-            text = ''
-            newline = '\n'
-            for line in diff:
-                text += line
-                # Work around missing newline (http://bugs.python.org/issue2142).
-                if text and not line.endswith(newline):
-                    text += newline
-            diff = text
-            print('diff[:1000]={0}'.format(diff[:1000]))
+            diff = self.diff_lines_to_string(diff)
 
         else:
             diff = (_('Unknown compare option!'))
 
         return diff, ratio
 
+
+    def diff_lines_to_string(selfself, diff):
+        text = ''
+        newline = '\n'
+        for line in diff:
+            text += line
+            # Work around missing newline (http://bugs.python.org/issue2142).
+            if text and not line.endswith(newline):
+                text += newline
+        diff = text
+        print('diff[:1000]={0}'.format(diff[:1000]))
+        return diff
 
     def get_txt_format_path(self, book_format_info):
         # Generate a path for the text file
@@ -939,6 +930,8 @@ class TextDiffDialog(QDialog):
     def save_diff_file(self):
         # Schreiben erst wenn "Speichern"-Button gedrückt
 
+        print('Enter save_diff_file()...')
+
         dialog = QFileDialog(self.gui)
         dialog.setFileMode(QFileDialog.FileMode.AnyFile)
         # dialog.setViewMode(QFileDialog.Detail)
@@ -960,52 +953,49 @@ class TextDiffDialog(QDialog):
         file_path = dialog.getSaveFileName(self.gui, _('Save File'), file_name, options)
         print('file_path={0}'.format(file_path))
         # file_path=('H:/Programmierung/Python/calibre_plugins/TextDiff/diff_file_5429_9166.htnl.html', 'HTML file (*.html)')
-        # file_path = Path(file_path[0])
         with open(file_path[0], 'w') as f:
             f.write(self.diff)
 
 
     def add_book(self):
 
-        #     db = self.gui.current_db
+        print('Enter add_book()...')
 
-        # # set default cover to same as first book
-        #             coverdata = db.cover(book_list[0]['calibre_id'], index_is_id=True)
-        # realmi = db.get_metadata(book_id, index_is_id=True)
-        # coverdata = cal_generate_cover(realmi)
-        #             if coverdata:
-        #                 db.set_cover(book_id, coverdata)
-        #
-        # def generate_covers(self, book_ids, generate_cover_opts):
-        #         from calibre.ebooks.covers import generate_cover
-        #         for book_id in book_ids:
-        #             mi = self.db.get_metadata(book_id, index_is_id=True)
-        #             cdata = generate_cover(mi, generate_cover_opts)
-        #             self.db.new_api.set_cover({book_id:cdata})
+        db = self.gui.current_db
+        mi = db.get_metadata(self.book_ids[0], index_is_id=True)
+        print('mi={0}'.format(mi))
 
-        # from calibre.ebooks.covers import generate_cover
-        # from calibre.utils.img import image_from_data
+        # mi=Title            : diff_file_11571_5640
+        # Title sort          : Alarm in Luna IV
+        # Author(s)           : Alf Tjörnsen [Tjörnsen, Alf]
+        # Publisher           : Pabel
+        # Tags                : chapbook, Science-Fiction
+        # Series              : Utopia Zukunftsroman #42
+        # Languages           : deu
+        # Timestamp           : 2021-08-27T12:04:01+00:00
+        # Published           : 2022-11-16T14:10:23.220643+00:00
+        # Identifiers         : isfdb-catalog:UZ042, isfdb:744768, dnb:455196915, isfdb-title:2645227, oclc-worldcat:73753207
+        # Comments            : No differences found!
+        # Unter-Serie, Zyklus : Jim Parker [42]
+        # Version, Variante, Auflage: 1
 
-        #         if mi == None:
-        #             mi = self.make_mi_from_book(book)
-        #
-        #         book_id = book['calibre_id']
-        #         if book_id == None:
-        #             book_id = db.create_book_entry(mi,
-        #                                            add_duplicates=True)
-        #             book['calibre_id'] = book_id
-        #             book['added'] = True
-        #         else:
-        #             book['added'] = False
-
-        # db.add_format_with_hooks(book_id,
-        #                                         options['fileform'],
-        #                                         book['outfile'], index_is_id=True):
-
-        # db.set_metadata(book_id,mi)
-
-        # db.commit()
-        pass
+        mi.tags = [mi.title, ', '.join(mi.authors), mi.publisher, mi.pubdate, mi.identifiers]
+        mi.title = 'diff_file_' + str(self.book_ids[0])  + '_' + str(self.book_ids[1])
+        mi.publisher = 'TextDiff'
+        mi.pubdate = datetime.now()
+        mi.timestamp = datetime.now()
+        # mi.comments = self.diff + mi.comments
+        print('mi={0}'.format(mi))
+        book_id = db.create_book_entry(mi, add_duplicates=True)
+        db.set_metadata(book_id, mi)
+        # set default cover to same as first book
+        # coverdata = db.cover(self.book_ids[0], index_is_id=True)
+        coverdata = generate_cover(mi, None)  # generate_cover_opts)
+        self.db.new_api.set_cover({book_id:coverdata})
+        # Make format (txt or html) from diff (often too big for in time comments field handlinmg of Calibre)
+        # self.diff
+        # ToDo
+        db.commit()
 
 
     def save_current_file(self):
