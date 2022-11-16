@@ -984,19 +984,42 @@ class TextDiffDialog(QDialog):
         mi.tags = [mi.title, ', '.join(mi.authors), mi.publisher, mi.pubdate, mi.identifiers]
         mi.title = 'diff_file_' + str(self.book_ids[0])  + '_' + str(self.book_ids[1])
         mi.publisher = 'TextDiff'
-        mi.pubdate = datetime.now()
-        mi.timestamp = datetime.now()
+        now = datetime.now()
+        mi.pubdate = datetime.strftime(now, '%Y-%m-%d %H:%M:%S')  # datetime.now()
+        mi.timestamp = datetime.strftime(now, '%Y-%m-%d %H:%M:%S')
         # mi.comments = self.diff + mi.comments
         print('mi={0}'.format(mi))
+        print('Create book...')
         book_id = db.create_book_entry(mi, add_duplicates=True)
         db.set_metadata(book_id, mi)
         # set default cover to same as first book
         # coverdata = db.cover(self.book_ids[0], index_is_id=True)
         coverdata = generate_cover(mi, None)  # generate_cover_opts)
+        print('Setting cover...')
         self.db.new_api.set_cover({book_id:coverdata})
         # Make format (txt or html) from diff (often too big for in time comments field handlinmg of Calibre)
         # self.diff
         # ToDo
+        if '<html>' in self.diff:
+           book_format = 'HTML'
+        else:
+            book_format = 'TXT'
+        print('Adding format...')
+        db.add_format_with_hooks(book_id, book_format, self.diff, index_is_id=True)
+        # existingepub = db.format(book_id, 'EPUB', index_is_id=True, as_file=True)
+        # # because calibre immediately transforms html into zip and don't want
+        # # to have an 'if html'.  db.has_format is cool with the case mismatch,
+        # # but if I'm doing it anyway...
+        # formmapping = {
+        #     'epub':'EPUB',
+        #     'mobi':'MOBI',
+        #     'html':'ZIP',
+        #     'txt':'TXT'
+        #     }
+        # db.add_format_with_hooks(book['calibre_id'],
+        #                                          'EPUB',
+        #                                          unnewtmp,
+        #                                          index_is_id=True)
         db.commit()
 
 
