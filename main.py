@@ -1,7 +1,8 @@
 # Die aktuelle Logik um das Benutzerinterface für einen Plugin Demo Dialog zu implementieren.
 
 import time, os, math
-from datetime import date, datetime
+import json
+from datetime import date, datetime, timezone
 from pathlib import Path
 import difflib  # https://github.com/python/cpython/blob/3.11/Lib/difflib.py
 
@@ -14,11 +15,13 @@ from PyQt5.Qt import (QDialog, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineE
 
 from calibre.gui2 import gprefs, error_dialog, info_dialog
 from calibre.ebooks.conversion.config import (get_input_format_for_book, sort_formats_by_preference)
+from calibre.ebooks.covers import generate_cover
 from calibre.ebooks.oeb.iterator import EbookIterator
-from calibre.utils.logging import Log as log
 from calibre.library import db
 from calibre.ptempfile import PersistentTemporaryFile, PersistentTemporaryDirectory
-from calibre.ebooks.covers import generate_cover
+from calibre.utils.date import utcnow
+from calibre.utils.img import image_from_data, image_to_data, remove_borders_from_image
+from calibre.utils.logging import Log as log
 
 from calibre_plugins.textdiff.config import prefs
 # from calibre_plugins.textdiff.ui import progressbar, show_progressbar, set_progressbar_label, \
@@ -963,8 +966,9 @@ class TextDiffDialog(QDialog):
 
         print('Enter add_book()...')
 
-        db = self.gui.current_db
-        mi = db.get_metadata(self.book_ids[0], index_is_id=True)
+        db = self.gui.current_db.new_api
+        # mi = db.get_metadata(self.book_ids[0], index_is_id=True) old API
+        mi = db.get_metadata(self.book_ids[0])
         print('mi={0}'.format(mi))
 
         # mi=Title            : diff_file_11571_5640
@@ -981,12 +985,16 @@ class TextDiffDialog(QDialog):
         # Unter-Serie, Zyklus : Jim Parker [42]
         # Version, Variante, Auflage: 1
 
-        mi.tags = [mi.title, ', '.join(mi.authors), mi.publisher, mi.pubdate, mi.identifiers]
+        mi.tags = [mi.title, ', '.join(mi.authors), mi.series, mi.publisher, datetime.strftime(mi.pubdate, '%Y-%m-%d'),
+                   json.dumps(mi.identifiers)]
         mi.title = 'diff_file_' + str(self.book_ids[0])  + '_' + str(self.book_ids[1])
         mi.publisher = 'TextDiff'
-        now = datetime.now()
-        mi.pubdate = datetime.strftime(now, '%Y-%m-%d %H:%M:%S')  # datetime.now()
-        mi.timestamp = datetime.strftime(now, '%Y-%m-%d %H:%M:%S')
+        # now = datetime.now().replace(microsecond=0).replace(tzinfo=timezone.utc).isoformat()
+        # mi.pubdate = now
+        mi.pubdate = mi.timestamp = utcnow()
+        # mi.pubdate = datetime.strftime(now, '%m/%d/%Y %H:%M:%S')  # datetime.now()
+        print('mi.pubdate={0}'.format(mi.pubdate))
+        # mi.timestamp = datetime.strftime(now, '%m/%d/%Y %H:%M:%S')
         # mi.comments = self.diff + mi.comments
         print('mi={0}'.format(mi))
         print('Create book...')
@@ -994,9 +1002,16 @@ class TextDiffDialog(QDialog):
         db.set_metadata(book_id, mi)
         # set default cover to same as first book
         # coverdata = db.cover(self.book_ids[0], index_is_id=True)
-        coverdata = generate_cover(mi, None)  # generate_cover_opts)
+        # cdata = self.db.new_api.cover(book_id)
+        #             if cdata:
+        #                 img = image_from_data(cdata)
+        #                 nimg = remove_borders_from_image(img)
+        #                 if nimg is not img:
+        #                     cdata = image_to_data(nimg)
+        #                     self.db.new_api.set_cover({book_id:cdata})
+        coverdata = generate_cover(mi)  # generate_cover_opts)
         print('Setting cover...')
-        self.db.new_api.set_cover({book_id:coverdata})
+        db.new_api.set_cover({book_id:coverdata})
         # Make format (txt or html) from diff (often too big for in time comments field handlinmg of Calibre)
         # self.diff
         # ToDo
@@ -1005,7 +1020,9 @@ class TextDiffDialog(QDialog):
         else:
             book_format = 'TXT'
         print('Adding format...')
-        db.add_format_with_hooks(book_id, book_format, self.diff, index_is_id=True)
+        # db.new_api.add_format(book_id, destination_fmt, path)
+        db.new_api.add_format(book_id, book_format, self.diff)
+        # db.add_format_with_hooks(book_id, book_format, self.diff, index_is_id=True)
         # existingepub = db.format(book_id, 'EPUB', index_is_id=True, as_file=True)
         # # because calibre immediately transforms html into zip and don't want
         # # to have an 'if html'.  db.has_format is cool with the case mismatch,
@@ -1022,6 +1039,35 @@ class TextDiffDialog(QDialog):
         #                                          index_is_id=True)
         db.commit()
 
+
+    def get_selected_books(self, guidb, sel_type):
+
+        selected_books_list = []
+        del selected_books_list
+        selected_books_list = []
+
+        book_ids_list = []
+        work_book_ids_frozenset = ""
+
+        if sel_type == "selected":
+            book_ids_list = list(map(partial(self.convert_id_to_book),
+                                     self.gui.library_view.get_selected_ids()))  # https://stackoverflow.com/questions/50671360/map-in-python-3-vs-python-2
+            n = len(book_ids_list)
+            if n == 0:
+                return selected_books_list
+            for item in book_ids_list:
+                s = as_unicode(item['calibre_id'])
+                selected_books_list.append(s)
+        else:
+            db = self.gui.current_db.new_api
+            work_book_ids_frozenset = db.all_book_ids()
+            for row in work_book_ids_frozenset:
+                selected_books_list.append(row)
+
+        del book_ids_list
+        del work_book_ids_frozenset
+
+        return selected_books_list
 
     def save_current_file(self):
         # ToDo: Save as html or txt, depending on output format combo
