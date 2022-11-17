@@ -12,6 +12,9 @@ __license__   = 'GPL v3'
 __copyright__ = '2022, feuille'
 __docformat__ = 'restructuredtext en'
 
+# _ = gettext.gettext
+# load_translations()
+
 # logger = logging.getLogger(__name__)
 # loghandler=logging.StreamHandler()
 # loghandler.setFormatter(logging.Formatter("textdiff: %(levelname)s: %(asctime)s: %(filename)s(%(lineno)d): %(message)s"))
@@ -53,7 +56,7 @@ class TextDiffBase(InterfaceActionBase):
     actual_plugin = 'calibre_plugins.textdiff.ui:TextDiffAction'
 
     # History
-    # Version 1.0.0 - 09-29-2022
+    # Version 1.0.0 - 11-17-2022
     # - Initial release
 
     def is_customizable(self):

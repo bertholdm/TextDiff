@@ -1,0 +1,255 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Perrypedia\n"
+"POT-Creation-Date: 2022-11-17 15:33+0100\n"
+"PO-Revision-Date: 2022-11-17 15:33+0100\n"
+"Last-Translator: Michael Detambel <info@michael-detambel.de>\n"
+"Language-Team: Michael Detambel\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 3.2\n"
+"X-Poedit-Basepath: ..\n"
+"X-Poedit-SearchPath-0: .\n"
+
+#: __init__.py:46
+msgid "UI plugin to find differences between two texts."
+msgstr ""
+
+#: config.py:49
+msgid "Config"
+msgstr ""
+
+#: config.py:52 main.py:240
+msgid "Compare"
+msgstr ""
+
+#: config.py:93
+msgid "These settings control the basic features of the plugin."
+msgstr ""
+
+#: main.py:146
+msgid "1st file (left):"
+msgstr ""
+
+#: main.py:148
+msgid "2nd file (right):"
+msgstr ""
+
+#: main.py:169
+msgid "Refresh book formats list"
+msgstr ""
+
+#: main.py:174
+msgid "Display format:"
+msgstr ""
+
+#: main.py:183
+msgid "Font family for output:"
+msgstr ""
+
+#: main.py:192
+msgid "Reduce number of lines around different lines"
+msgstr ""
+
+#: main.py:197
+msgid ""
+"Set context to True when contextual differences are to be shown, else the "
+"default is False to show the full files."
+msgstr ""
+
+#: main.py:203
+msgid "Number of context lines:"
+msgstr ""
+
+#: main.py:214
+msgid ""
+"When context is True numlines controls the number of context lines which "
+"surround the difference highlights. When context is False numlines controls "
+"the number of lines which are shown before a difference highlight when using "
+"the “next” hyperlinks (setting to zero would cause the “next” hyperlinks to "
+"place the next difference highlight at the top of the browser without any "
+"leading context)."
+msgstr ""
+
+#: main.py:220
+msgid "Tabsize (HtmlDiff):"
+msgstr ""
+
+#: main.py:228
+msgid "Specify tab stop spacing."
+msgstr ""
+
+#: main.py:230
+msgid "Wrap columns at (HtmlDiff):"
+msgstr ""
+
+#: main.py:238
+msgid ""
+"Specify column number where lines are broken and wrapped. 0 for not to break."
+msgstr ""
+
+#: main.py:251
+msgid "A measure of the sequences’ similarity as a float in the range [0, 1]."
+msgstr ""
+
+#: main.py:253
+msgid "Copy output to clipboard."
+msgstr ""
+
+#: main.py:255
+msgid "Save output to file"
+msgstr ""
+
+#: main.py:257
+msgid "Save output as book"
+msgstr ""
+
+#: main.py:319
+msgid "TextDiff Plugin"
+msgstr ""
+
+#: main.py:402
+msgid "TextDiff error"
+msgstr ""
+
+#: main.py:403
+msgid "One or two books (with at least total two formats) must be marked."
+msgstr ""
+
+#: main.py:465
+msgid "Starting compare..."
+msgstr ""
+
+#: main.py:474
+msgid "No books selected"
+msgstr ""
+
+#: main.py:475 main.py:478
+msgid ""
+"You must select one book with more than one format or two books to perform "
+"this action."
+msgstr ""
+
+#: main.py:477
+msgid "Too much books selected"
+msgstr ""
+
+#: main.py:518
+msgid "Not enough formats to compare"
+msgstr ""
+
+#: main.py:519
+msgid "The selected book(s) must have at least two formats to compare."
+msgstr ""
+
+#: main.py:549
+msgid "Format conversion finished. Beginning compare..."
+msgstr ""
+
+#: main.py:576
+msgid ""
+"No differences found in text. However, there may be differences in metadata, "
+"formatting or MIME content."
+msgstr ""
+
+#: main.py:590
+msgid "No diff result! Please report this."
+msgstr ""
+
+#: main.py:593
+msgid ""
+"No differences found in text. However, there may be differences in "
+"formatting or MIME content."
+msgstr ""
+
+#: main.py:600
+msgid "Unknown difftype or result:\\n"
+msgstr ""
+
+#: main.py:632
+msgid "Starting ebook-convert..."
+msgstr ""
+
+#: main.py:656
+msgid "TextDiff plugin"
+msgstr ""
+
+#: main.py:657
+#, python-brace-format
+msgid "The file {0} don't exist. Probably conversion to text format failed."
+msgstr ""
+
+#: main.py:685 main.py:818
+msgid "No differences found!"
+msgstr ""
+
+#: main.py:781
+msgid "Diff finished."
+msgstr ""
+
+#: main.py:816
+msgid "diff list is empty - no differences found!"
+msgstr ""
+
+#: main.py:858
+msgid "Unknown compare option!"
+msgstr ""
+
+#: main.py:908 main.py:909
+msgid "HTML file (*.html)"
+msgstr ""
+
+#: main.py:912 main.py:913
+msgid "Text (*.txt)"
+msgstr ""
+
+#: main.py:919
+msgid "Save File"
+msgstr ""
+
+#: main.py:929
+msgid "Adding book..."
+msgstr ""
+
+#: main.py:985
+msgid "Book saved."
+msgstr ""
+
+#: main.py:986
+msgid "Save diff to book."
+msgstr ""
+
+#: main.py:986
+msgid "Book with diff content as format added"
+msgstr ""
+
+#: ui.py:27
+msgid "TextDiff"
+msgstr ""
+
+#: ui.py:27
+msgid "Run the TextDiff Plugin."
+msgstr ""
+
+#: ui.py:71
+msgid "Compyare..."
+msgstr ""
+
+#: ui.py:72
+msgid "Settings..."
+msgstr ""
+
+#: ui.py:73
+msgid "About..."
+msgstr ""
+
+#: ui.py:74
+msgid "Help..."
+msgstr ""
+
+#: ui.py:131
+msgid "About TextDiff"
+msgstr ""

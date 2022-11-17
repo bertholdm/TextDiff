@@ -11,6 +11,8 @@ from calibre_plugins.textdiff.main import TextDiffDialog
 
 DEFAULT_ICON = 'images/icon.png'
 
+# _ = gettext.gettext
+# load_translations()
 
 class TextDiffAction(InterfaceAction):
 
@@ -100,7 +102,6 @@ class TextDiffAction(InterfaceAction):
     def copy_dialog(self):
         # This is the main process (ToDo: -> main.py)
         pass
-
 
     def show_configuration(self):
         # Standard Calibre's method to show configuration window.

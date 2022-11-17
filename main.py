@@ -1,8 +1,9 @@
-# Die aktuelle Logik um das Benutzerinterface für einen Plugin Demo Dialog zu implementieren.
+# The main file of Calibre TextDiff Plugin.
 
 import time, os, math
 import json
 from datetime import date, datetime, timezone
+from io import StringIO, BytesIO
 from pathlib import Path
 import difflib  # https://github.com/python/cpython/blob/3.11/Lib/difflib.py
 
@@ -27,6 +28,8 @@ from calibre_plugins.textdiff.config import prefs
 # from calibre_plugins.textdiff.ui import progressbar, show_progressbar, set_progressbar_label, \
 #    increment_progressbar, hide_progressbar
 
+# _ = gettext.gettext
+# load_translations()
 
 class TextDiffDialog(QDialog):
 
@@ -136,26 +139,9 @@ class TextDiffDialog(QDialog):
         self.db = gui.current_db
 
         self.grid_layout = QGridLayout()
-        # GridLayout layout = new GridLayout(2,5);  # Java
 
-        # ToDo: Generell auf ereignisse reagieren (single form interface)
+        # ToDo: LineEdit field for charjunk?
 
-        #         self.checkbox = QtWidgets.QCheckBox("Use This Config File")
-        #         self.checkbox.setMinimumHeight(30)
-        #         self.checkbox.stateChanged.connect(self.use_config_file)
-        #         self.checkbox.setToolTip(msg)
-        #         self.gl7.addWidget(self.checkbox, 1, 0, 1, 1)
-        #         if ui.use_custom_config_file:
-        #             self.checkbox.setChecked(True)
-
-        #         self.checkbox = QtWidgets.QCheckBox("Use This Config File")
-        #         self.checkbox.setMinimumHeight(30)
-        #         self.checkbox.stateChanged.connect(self.use_config_file)
-        #         self.checkbox.setToolTip(msg)
-        #         self.gl7.addWidget(self.checkbox, 1, 0, 1, 1)
-        #         if ui.use_custom_config_file:
-        #             self.checkbox.setChecked(True)
-        
         # Header for file info
         self.file_header_0 = QLabel(_('1st file (left):'))
         self.file_header_0.setObjectName(f"file_header_0")
@@ -208,6 +194,8 @@ class TextDiffDialog(QDialog):
         self.context.setEnabled(True)  # HtmlDiff ist selected by default, so enable context flag
         self.context.setChecked(False)
         self.context.stateChanged.connect(self.on_context_ChangedState)
+        self.context.setToolTip(_('Set context to True when contextual differences are to be shown, '
+                                  'else the default is False to show the full files.'))
         # numlines defaults to 5. When context is True numlines controls the number of context lines which surround
         # the difference highlights. When context is False numlines controls the number of lines which are shown
         # before a difference highlight when using the “next” hyperlinks (setting to zero would cause the “next”
@@ -223,6 +211,11 @@ class TextDiffDialog(QDialog):
         # if initial_value != None:
         #     self.lnumines.setText(str(initial_value))
         self.numlines.setEnabled(True)  # HtmlDiff ist selected by default, so enable context flag and numlines
+        self.numlines.setToolTip(_('When context is True numlines controls the number of context lines which surround '
+                                    'the difference highlights. When context is False numlines controls the number of '
+                                    'lines which are shown before a difference highlight when using the “next” '
+                                    'hyperlinks (setting to zero would cause the “next” hyperlinks to place the next '
+                                    'difference highlight at the top of the browser without any leading context).'))
 
         self.tabsize_label = QLabel(_('Tabsize (HtmlDiff):'))
         self.tabsize_label.setAlignment(Qt.AlignRight)
@@ -232,7 +225,7 @@ class TextDiffDialog(QDialog):
         self.tabsize.setValidator(QIntValidator())
         self.tabsize.setMaxLength(2)
         self.tabsize.setText('4')
-        self.tabsize.setToolTip('Specify tab stop spacing.')
+        self.tabsize.setToolTip(_('Specify tab stop spacing.'))
 
         self.wrapcolumn_label = QLabel(_('Wrap columns at (HtmlDiff):'))
         self.wrapcolumn_label.setAlignment(Qt.AlignRight)
@@ -242,7 +235,7 @@ class TextDiffDialog(QDialog):
         self.wrapcolumn.setValidator(QIntValidator())
         self.wrapcolumn.setMaxLength(2)
         self.wrapcolumn.setText('60')
-        self.wrapcolumn.setToolTip('Specify column number where lines are broken and wrapped. 0 for not to break.')
+        self.wrapcolumn.setToolTip(_('Specify column number where lines are broken and wrapped. 0 for not to break.'))
 
         self.compare_button = QPushButton(_('Compare'), self)
         self.compare_button.clicked.connect(self.compare)
@@ -255,6 +248,7 @@ class TextDiffDialog(QDialog):
         self.ratio_label.setObjectName('ratio_label')
         self.ratio = QLineEdit(self)
         # self.ratio.setEnabled(False)
+        self.ratio.setToolTip(_('A measure of the sequences’ similarity as a float in the range [0, 1].'))
 
         self.copy_diff_file_button = QPushButton(_('Copy output to clipboard.'), self)
         self.copy_diff_file_button.clicked.connect(self.copy_diff_file)
@@ -348,13 +342,6 @@ class TextDiffDialog(QDialog):
         return ch in ws
 
 
-    # def on_hide_equals_ChangedState(self, checked):
-    #     if self.hide_equals.isChecked():
-    #         self.text_browser.setHtml(self.diff_strict)
-    #     else:
-    #         self.text_browser.setHtml(self.diff)
-
-
     # Only for HtmlDiff
     def on_context_ChangedState(self, checked):
         if self.context.isChecked():
@@ -401,10 +388,6 @@ class TextDiffDialog(QDialog):
     #     self.input_formats.setCurrentIndex(input_formats.index(input_format))
 
 
-    def close_dialog(self):
-        pass
-
-
     def refresh_formats(self):
 
         # refresh formats list (e. g. after marked new books)
@@ -421,23 +404,6 @@ class TextDiffDialog(QDialog):
                              show_copy_button=False)
             d.exec_()
             return None
-
-        # # Fill the files and formats fields
-        # # and check the number of formats
-        # input_formats = []
-        # db = self.gui.library_view.model().db
-        # for book_id in book_ids:
-        #     input_formats.append(get_input_format_for_book(db, self.book_id))
-        # print('input_formats=')
-        # print(input_formats)
-        # format_count = len(input_formats)
-        # if format_count < 2:
-        #     d = error_dialog(self.gui,
-        #                      _('TextDiff error'),
-        #                      _('Two formats are needed.'),
-        #                      show_copy_button=False)
-        #     d.exec_()
-        #     return None
 
         if book_count == 2:
             # Two books with at least two formats in sum
@@ -471,6 +437,10 @@ class TextDiffDialog(QDialog):
         self.text_browser.clear()
 
 
+    def close_dialog(self):
+        pass
+
+
     def closeEvent(self, event):
 
         event.accept()
@@ -489,15 +459,11 @@ class TextDiffDialog(QDialog):
         #     event.ignore()
 
 
-    # ToDo: compare(txt_file_path[0], txt_file_path[1], options). convert separat!
     def compare(self):
         # This is the main process
         log('Starting compare...')
         self.gui.status_bar.showMessage(_('Starting compare...'))
-
-        # ToDo: with busy_cursor():
-
-        # ToDo: Check if formats already converted (if user has only selected another output option)
+        QApplication.setOverrideCursor(Qt.WaitCursor)
 
         # Get the book id(s) of selected book(s)
         db = self.gui.library_view.model().db  # db = self.gui.current_db.new_api
@@ -537,10 +503,13 @@ class TextDiffDialog(QDialog):
 
         # for format in available_formats[i][1]:  # Loop thru formats list for this book
         print('selected_formats={0}'.format(selected_formats))
-        for i in range(2):  # ToDo: len(selected_formats)?
+        j = 0
+        for i in range(2):  # ToDo: check len(selected_formats)?
             print('Fetching info for selected format #{0}'.format(i))
-            if selected_formats[i] in available_formats[i]['formats']:
-                book_id = available_formats[i]['book_id']
+            if book_count > 1:
+                j = i
+            if selected_formats[i] in available_formats[j]['formats']:
+                book_id = available_formats[j]['book_id']
                 title = books_metadata[i].title
                 format = selected_formats[i]
                 book_formats_info.append((book_id, title, format, db.format_abspath(book_id, format, index_is_id=True)))
@@ -553,17 +522,12 @@ class TextDiffDialog(QDialog):
                                 _('The selected book(s) must have at least two formats to compare.'),
                                 show=True)
 
-        # Start progressbar
-        size = 0
-        for book_format_info in book_formats_info:
-            fmt_metadata = self.db.format_metadata(book_format_info[0], book_format_info[2])
-            size = size + fmt_metadata['size']
-        print('size={0}'.format(size))
-        # self.progressbar(_("Starting compare..."), on_top=True)
-        # self.show_progressbar(size)
-        # self.set_progressbar_label(_("Compare"))
-        # # ToDo: nach unten
-        # self.increment_progressbar()
+        # ToDo: Start progressbar?
+        # size = 0
+        # for book_format_info in book_formats_info:
+        #     fmt_metadata = self.db.format_metadata(book_format_info[0], book_format_info[2])
+        #     size = size + fmt_metadata['size']
+        # print('size={0}'.format(size))
 
         text_formats = []
         # convert_options = ' -v -v –enable-heuristics '
@@ -629,7 +593,7 @@ class TextDiffDialog(QDialog):
                     _('No diff result! Please report this.'))
             elif '<td>&nbsp;No Differences Found&nbsp;</td>' in self.diff or ratio == 1.0:
                 self.text_browser.setPlainText(
-                    _('No differences found in text. However, there may be differences in formatting or MIME content.'))
+                    _('No differences found in text. However, there may be differences in metadata, formatting or MIME content.'))
             elif diff_options['difftype'] == 'HTML':
                 self.text_browser.setHtml(self.diff)
             elif diff_options['difftype'] in ['CONTEXT', 'NDIFF', 'UNIFIED']:
@@ -638,6 +602,7 @@ class TextDiffDialog(QDialog):
             else:
                 self.text_browser.setPlainText(_('Unknown difftype or result:\\n') + self.diff)
 
+        QApplication.restoreOverrideCursor()
         self.gui.activateWindow()  # Bring window in front
 
 
@@ -736,7 +701,7 @@ class TextDiffDialog(QDialog):
         # https://docs.python.org/3/library/difflib.html
         if diff_options['difftype'] == 'HTML':
 
-            # ToDo: wrapcolumn, linejunk, charjunk as parm
+            # ToDo: linejunk, charjunk as parm
             print('Instantiate HtmlDiff...')
             # This class can be used to create an HTML table (or a complete HTML file containing the table) showing
             # a side by side, line by line comparison of text with inter-line and intra-line change highlights.
@@ -755,6 +720,7 @@ class TextDiffDialog(QDialog):
             styles = self.styles
             styles.replace('sans-serif', diff_options['font'])
             d._styles = styles
+            # self.styles is included in self.before_table_template
             before_table_template = self.before_table_template
             before_table_template.replace('sans-serif', diff_options['font'])
             self.before_table_template = before_table_template
@@ -769,7 +735,6 @@ class TextDiffDialog(QDialog):
             #     make_file -- generates complete HTML file with a single side by side table
             #     See tools/scripts/diff.py for an example usage of this class.
             #     """
-
             #         Arguments:
             #         fromlines -- list of "from" lines
             #         tolines -- list of "to" lines
@@ -784,7 +749,6 @@ class TextDiffDialog(QDialog):
             #             "next" link jumps to just before the change).
             #         charset -- charset of the HTML document
             #         """
-
             # context and numlines are both optional keyword arguments. Set context to True when contextual differences
             # are to be shown, else the default is False to show the full files. numlines defaults to 5.
             # When context is True numlines controls the number of context lines which surround the difference
@@ -965,9 +929,11 @@ class TextDiffDialog(QDialog):
     def add_book(self):
 
         print('Enter add_book()...')
+        self.gui.status_bar.showMessage(_('Adding book...'))
 
-        db = self.gui.current_db.new_api
-        # mi = db.get_metadata(self.book_ids[0], index_is_id=True) old API
+        # https://manual.calibre-ebook.com/de/db_api.html
+
+        db = self.gui.current_db.new_api  # Get access to db API
         mi = db.get_metadata(self.book_ids[0])
         print('mi={0}'.format(mi))
 
@@ -989,222 +955,45 @@ class TextDiffDialog(QDialog):
                    json.dumps(mi.identifiers)]
         mi.title = 'diff_file_' + str(self.book_ids[0])  + '_' + str(self.book_ids[1])
         mi.publisher = 'TextDiff'
-        # now = datetime.now().replace(microsecond=0).replace(tzinfo=timezone.utc).isoformat()
-        # mi.pubdate = now
         mi.pubdate = mi.timestamp = utcnow()
-        # mi.pubdate = datetime.strftime(now, '%m/%d/%Y %H:%M:%S')  # datetime.now()
-        print('mi.pubdate={0}'.format(mi.pubdate))
-        # mi.timestamp = datetime.strftime(now, '%m/%d/%Y %H:%M:%S')
-        # mi.comments = self.diff + mi.comments
         print('mi={0}'.format(mi))
+
         print('Create book...')
         book_id = db.create_book_entry(mi, add_duplicates=True)
         db.set_metadata(book_id, mi)
-        # set default cover to same as first book
-        # coverdata = db.cover(self.book_ids[0], index_is_id=True)
-        # cdata = self.db.new_api.cover(book_id)
-        #             if cdata:
-        #                 img = image_from_data(cdata)
-        #                 nimg = remove_borders_from_image(img)
-        #                 if nimg is not img:
-        #                     cdata = image_to_data(nimg)
-        #                     self.db.new_api.set_cover({book_id:cdata})
-        coverdata = generate_cover(mi)  # generate_cover_opts)
+        # Set cover with config defaults
         print('Setting cover...')
+        coverdata = generate_cover(mi)  # generate_cover_opts
         db.new_api.set_cover({book_id:coverdata})
-        # Make format (txt or html) from diff (often too big for in time comments field handlinmg of Calibre)
-        # self.diff
-        # ToDo
+        # Save diff as format (txt or html) (diff is often too big for in time handlinm in comment field)
         if '<html>' in self.diff:
            book_format = 'HTML'
         else:
             book_format = 'TXT'
         print('Adding format...')
-        # db.new_api.add_format(book_id, destination_fmt, path)
-        db.new_api.add_format(book_id, book_format, self.diff)
-        # db.add_format_with_hooks(book_id, book_format, self.diff, index_is_id=True)
-        # existingepub = db.format(book_id, 'EPUB', index_is_id=True, as_file=True)
-        # # because calibre immediately transforms html into zip and don't want
-        # # to have an 'if html'.  db.has_format is cool with the case mismatch,
-        # # but if I'm doing it anyway...
-        # formmapping = {
-        #     'epub':'EPUB',
-        #     'mobi':'MOBI',
-        #     'html':'ZIP',
-        #     'txt':'TXT'
-        #     }
-        # db.add_format_with_hooks(book['calibre_id'],
-        #                                          'EPUB',
-        #                                          unnewtmp,
-        #                                          index_is_id=True)
-        db.commit()
+        # def add_format(self, book_id, fmt, stream_or_path, replace=True, run_hooks=True, dbapi=None):
+        #         '''
+        #         Add a format to the specified book. Return True if the format was added successfully.
+        #
+        #         :param replace: If True replace existing format, otherwise if the format already exists, return False.
+        #         :param run_hooks: If True, file type plugins are run on the format before and after being added.
+        diff_io = BytesIO(str.encode(self.diff))  # convert a string to a stream object
+        print('diff_io has type {0}'.format(type(diff_io)))
+        rc = db.new_api.add_format(book_id, book_format, diff_io, replace=True, run_hooks=False)
+        print('rc={0}'.format(rc))
+        # with lopen(path, 'rb') as stream:
+        # db.new_api.add_format(book_id, book_format, str.encode(self.diff), replace=True, run_hooks=False)
+        diff_io.close()
+        log('Book saved.')
+        self.gui.status_bar.showMessage(_('Book saved.'))
+        info_dialog(self, _('Save diff to book.'), _('Book with diff content as format added'),show=True)
 
-
-    def get_selected_books(self, guidb, sel_type):
-
-        selected_books_list = []
-        del selected_books_list
-        selected_books_list = []
-
-        book_ids_list = []
-        work_book_ids_frozenset = ""
-
-        if sel_type == "selected":
-            book_ids_list = list(map(partial(self.convert_id_to_book),
-                                     self.gui.library_view.get_selected_ids()))  # https://stackoverflow.com/questions/50671360/map-in-python-3-vs-python-2
-            n = len(book_ids_list)
-            if n == 0:
-                return selected_books_list
-            for item in book_ids_list:
-                s = as_unicode(item['calibre_id'])
-                selected_books_list.append(s)
-        else:
-            db = self.gui.current_db.new_api
-            work_book_ids_frozenset = db.all_book_ids()
-            for row in work_book_ids_frozenset:
-                selected_books_list.append(row)
-
-        del book_ids_list
-        del work_book_ids_frozenset
-
-        return selected_books_list
-
-    def save_current_file(self):
-        # ToDo: Save as html or txt, depending on output format combo
-        if not self.file_path:
-            new_file_path, filter_type = QFileDialog.getSaveFileName(self, "Save this file as...", "",
-                                                                     "All files (*)")
-            if new_file_path:
-                self.file_path = new_file_path
-            else:
-                self.invalid_path_alert_message()
-                return False
-        file_contents = self.scrollable_text_area.toPlainText()
-        with open(self.file_path, "w") as f:
-            f.write(file_contents)
-        self.title.setText(self.file_path)
-
-    def get_book_info_from_book_id(self, book_id):
-        book = {}
-        book['calibre_id'] = book_id
-        # ToDo:
-        book['title'] = _('Unknown')
-        book['author'] = _('Unknown')
-        return book
-
-    def populate_book_from_calibre_id(self, book, db=None, tdir=None):
-        mi = db.get_metadata(book['calibre_id'], index_is_id=True)
-
-        # from https://github.com/kovidgoyal/calibre/blob/master/src/calibre/gui2/convert/metadata.py
-        # mi = self.db.get_metadata(self.book_id, index_is_id=True)
-        # self.title.setText(mi.title), self.title.home(False)
-
-        #book = {}
-        book['good'] = True
-        book['calibre_id'] = mi.id
-        book['title'] = mi.title
-        book['authors'] = mi.authors
-        book['author_sort'] = mi.author_sort
-        book['tags'] = mi.tags
-        book['series'] = mi.series
-        book['comments'] = mi.comments
-        book['publisher'] = mi.publisher
-        book['pubdate'] = mi.pubdate
-        if book['series']:
-            book['series_index'] = mi.series_index
-        else:
-            book['series_index'] = None
-        book['languages'] = mi.languages
-        book['error'] = ''
-        if db.has_format(mi.id,'EPUB',index_is_id=True):
-            # don't need metadata, use epub directly
-            book['epub'] = db.format_abspath(mi.id,'EPUB',index_is_id=True)
-        else:
-            book['good'] = False;
-            book['error'] = _("%s by %s doesn't have an EPUB.")%(mi.title,', '.join(mi.authors))
-
-    def get_calibre_books():
-        """Get the list of books and authors from my Calibre eBook library."""
-        # First open the Calibre library and get a list of the book IDs
-        calibre_db = calibre.library.db(
-            ebooksconf.CALIBRE_LIBRARY_LOCATION
-        ).new_api
-        book_ids = calibre_db.all_book_ids()
-        print("Got {} book IDs from Calibre library".format(len(book_ids)))
-
-
-    def marked(self):
-        ''' Show books with only one format '''
-        db = self.db.new_api
-        matched_ids = {book_id for book_id in db.all_book_ids() if len(db.formats(book_id)) == 1}
-        # Mark the records with the matching ids
-        # new_api does not know anything about marked books, so we use the full
-        # db object
-        self.db.set_marked_ids(matched_ids)
-
-        # Tell the GUI to search for all marked records
-        self.gui.search.setEditText('marked:true')
-        self.gui.search.do_search()
-
-    def view(self):
-        ''' View the most recently added book '''
-        most_recent = most_recent_id = None
-        db = self.db.new_api
-        for book_id, timestamp in db.all_field_for('timestamp', db.all_book_ids()).items():
-            if most_recent is None or timestamp > most_recent:
-                most_recent = timestamp
-                most_recent_id = book_id
-
-        if most_recent_id is not None:
-            # Get a reference to the View plugin
-            view_plugin = self.gui.iactions['View']
-            # Ask the view plugin to launch the viewer for row_number
-            view_plugin._view_calibre_books([most_recent_id])
-
-    def update_metadata(self):
-        '''
-        Set the metadata in the files in the selected book's record to
-        match the current metadata in the database.
-        '''
-        from calibre.ebooks.metadata.meta import set_metadata
-        from calibre.gui2 import error_dialog, info_dialog
-
-        # Get currently selected books
-        rows = self.gui.library_view.selectionModel().selectedRows()
-        if not rows or len(rows) == 0:
-            return error_dialog(self.gui, 'Populate format combo boxes',
-                             'No books selected', show=True)
-        # Map the rows to book ids
-        ids = list(map(self.gui.library_view.model().id, rows))
-        db = self.db.new_api
-        for book_id in ids:
-            # Get the current metadata for this book from the db
-            mi = db.get_metadata(book_id, get_cover=True, cover_as_data=True)
-            fmts = db.formats(book_id)
-            if not fmts:
-                continue
-            for fmt in fmts:
-                fmt = fmt.lower()
-                # Get a python file object for the format. This will be either
-                # an in memory file or a temporary on disk file
-                ffile = db.format(book_id, fmt, as_file=True)
-                ffile.seek(0)
-                # Set metadata in the format
-                set_metadata(ffile, mi, fmt)
-                ffile.seek(0)
-                # Now replace the file in the calibre library with the updated
-                # file. We dont use add_format_with_hooks as the hooks were
-                # already run when the file was first added to calibre.
-                db.add_format(book_id, fmt, ffile, run_hooks=False)
-
-        info_dialog(self, 'Updated files',
-                'Updated the metadata in the files of %d book(s)'%len(ids),
-                show=True)
 
     def config(self):
         self.do_user_config(parent=self)
         # Apply the changes
         self.label.setText(prefs['hello_world_msg'])
+
 
     def about(self):
         # Get the about text from a file inside the plugin zip file
@@ -1268,39 +1057,3 @@ class AboutWindow(QMainWindow):
 
     def clicked(self):
         self.close()
-
-
-class MyHTML(difflib.HtmlDiff):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        # append new styles inside new class
-        self._styles = self._styles + """
-table.diff {width: 300px}
-.diff_sub {display: inline-block; word-break: break-word;}
-.diff_add {display: inline-block; word-break: break-word;}
-"""
-
-    # function from source code - I remove only `nowrap="nowrap"`
-    def _format_line(self, side, flag, linenum, text):
-        """Returns HTML markup of "from" / "to" text lines
-        side -- 0 or 1 indicating "from" or "to" text
-        flag -- indicates if difference on line
-        linenum -- line number (used for line number column)
-        text -- line text to be marked up
-        """
-        try:
-            linenum = '%d' % linenum
-            id = ' id="%s%s"' % (self._prefix[side], linenum)
-        except TypeError:
-            # handle blank lines where linenum is '>' or ''
-            id = ''
-        # replace those things that would get confused with HTML symbols
-        text = text.replace("&", "&amp;").replace(">", "&gt;").replace("<", "&lt;")
-
-        # make space non-breakable so they don't get compressed or line wrapped
-        text = text.replace(' ', '&nbsp;').rstrip()
-
-        return '<td class="diff_header"%s>%s</td><td>%s</td>' \
-               % (id, linenum, text)
