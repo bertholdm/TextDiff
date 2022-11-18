@@ -2,6 +2,7 @@
 
 # In dieser definieren Sie wie eine grafische Benutzeroberfläche Ihres Plugin aussehen wird.
 
+import gettext
 
 from PyQt5.Qt import (QMenu, QDialog, QWidget, QTabWidget, QVBoxLayout, QHBoxLayout, QLabel, QGridLayout, QMessageBox,
                        QTextEdit, QLineEdit, QFont, QComboBox, QCheckBox, QPushButton, QToolButton, QScrollArea)
@@ -11,8 +12,8 @@ from calibre_plugins.textdiff.main import TextDiffDialog
 
 DEFAULT_ICON = 'images/icon.png'
 
-# _ = gettext.gettext
-# load_translations()
+_ = gettext.gettext
+load_translations()
 
 class TextDiffAction(InterfaceAction):
 

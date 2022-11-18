@@ -2,6 +2,8 @@
 
 import time, os, math
 import json
+import re
+import gettext
 from datetime import date, datetime, timezone
 from io import StringIO, BytesIO
 from pathlib import Path
@@ -28,8 +30,8 @@ from calibre_plugins.textdiff.config import prefs
 # from calibre_plugins.textdiff.ui import progressbar, show_progressbar, set_progressbar_label, \
 #    increment_progressbar, hide_progressbar
 
-# _ = gettext.gettext
-# load_translations()
+_ = gettext.gettext
+load_translations()
 
 class TextDiffDialog(QDialog):
 
@@ -96,12 +98,13 @@ class TextDiffDialog(QDialog):
         # <td nowrap="nowrap">(some text or blank line from file 1)</td>
         # </tr>
 
+        # font-family default is monospace. For HtmlDiff it is changed to user selected fornt
         self.styles = """
         table.diff {
             width: 100%;
             table-layout: fixed;
             border-spacing: 0;
-            font-family: sans-serif; 
+            font-family: monospace; 
             border: none;
             border-collapse: collapse;
         }
@@ -503,14 +506,15 @@ class TextDiffDialog(QDialog):
 
         # for format in available_formats[i][1]:  # Loop thru formats list for this book
         print('selected_formats={0}'.format(selected_formats))
-        j = 0
         for i in range(2):  # ToDo: check len(selected_formats)?
             print('Fetching info for selected format #{0}'.format(i))
-            if book_count > 1:
+            if book_count == 1:
+                j = 0
+            else:
                 j = i
             if selected_formats[i] in available_formats[j]['formats']:
                 book_id = available_formats[j]['book_id']
-                title = books_metadata[i].title
+                title = books_metadata[j].title
                 format = selected_formats[i]
                 book_formats_info.append((book_id, title, format, db.format_abspath(book_id, format, index_is_id=True)))
         print('book_formats_info={0}'.format(book_formats_info))
@@ -716,14 +720,14 @@ class TextDiffDialog(QDialog):
 
             # Overwrite Difflib table and file templates (remove legend and modernize html and css)
             d._table_template = self.table_template
-            d._file_template = self.file_template
-            styles = self.styles
-            styles.replace('sans-serif', diff_options['font'])
+            # d._file_template = self.file_template
+            styles = self.styles  # Do not change the template itself
+            styles.replace('monospace', diff_options['font'])
             d._styles = styles
             # self.styles is included in self.before_table_template
             before_table_template = self.before_table_template
-            before_table_template.replace('sans-serif', diff_options['font'])
-            self.before_table_template = before_table_template
+            before_table_template.replace('monospace', diff_options['font'])
+            print('before_table_template={0}'.format(before_table_template))
 
             #     """For producing HTML side by side comparison with change highlights.
             #     This class can be used to create an HTML table (or a complete HTML file
@@ -773,19 +777,30 @@ class TextDiffDialog(QDialog):
             diff = d.make_table(text_lines[0], text_lines[1], book_attributes[0], book_attributes[1],
                                 context=diff_options['context'], numlines=diff_options['numlines'])\
             # nur für make_file: charset='utf-8'
-
-            # Caution: if no differences found, make_file returns a table with an appropriate message text,
-            # make_table returns the complete text (with no differences marked of course).
-
-            # To check for differences found, use ratio (1.0 if no differences)
-            # and/or a non-empty list of rows with differences (see below)
-
-            print('Diff finished, diff[:1000] + diff[-200:]=' + diff[:1000] + diff[-200:])
+            print('Diff finished, diff[:1000] + diff[-200:]=' + diff[:1000] + '*****' + diff[-200:])
             self.gui.status_bar.showMessage(_('Diff finished.'))
 
+            diff_table = diff  # preserve diff table
+
+            # Caution: if no differences found, make_file returns a table with an appropriate message text,
+            # make_table returns the complete text (with no differences marked off course).
+
+            # To check if differences found, use ratio (1.0 if no differences)
+            # and/or a non-empty list of rows with differences (see below)
+
+            # Replace colspan in table head by two seperate cols (works better in Qt HtmlBrowser widget)
+            # <thead>
+            # <tr>
+            # <th class="diff_next"><br /></th>
+            # <th colspan="2" class="diff_header">Fahigkeiten unbekannt - K. H. Scheer_epub_10683.txt</th>
+            # <th class="diff_next"><br /></th>
+            # <th colspan="2" class="diff_header">Fahigkeiten unbekannt - K. H. Scheer_epub_943.txt</th>
+            # </tr>
+            # </thead>
+            diff = re.sub('<th colspan="2"', '<th class="diff_header">&nbsp;</th><th>', diff)
+
             # Wrap html around diff table
-            diff_table = diff
-            diff = self.before_table_template + diff + self.after_table_template
+            diff = before_table_template + diff + self.after_table_template
 
             # Make a shadow table with differences
 
@@ -892,8 +907,9 @@ class TextDiffDialog(QDialog):
 
     def copy_diff_file(self):
         # paste entire text in compare result to clipboard
-        txt = self.text_browser.selectAll()
-        QApplication.clipboard().setText(txt)
+        cb = QApplication.clipboard()
+        cb.clear()
+        cb.setText(self.text_browser.copy())
 
 
     def save_diff_file(self):

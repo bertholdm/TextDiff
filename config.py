@@ -2,12 +2,13 @@
 
 # The code to manage configuration data in the demo plugin is in config.py:
 
+import gettext
 from calibre.utils.config import JSONConfig
 from PyQt5.Qt import (QMenu, QDialog, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QFont, QGridLayout,
                        QTextEdit, QComboBox, QCheckBox, QPushButton, QToolButton, QTabWidget, QScrollArea)
 
-# _ = gettext.gettext
-# load_translations()
+_ = gettext.gettext
+load_translations()
 
 # This is where all preferences for this plugin will be stored
 # Remember that this name (i.e. plugins/interface_demo) is also

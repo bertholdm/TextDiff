@@ -4,6 +4,7 @@
 
 import sys, os
 import logging
+import gettext
 
 from calibre.constants import DEBUG
 from calibre.customize import InterfaceActionBase
@@ -12,8 +13,8 @@ __license__   = 'GPL v3'
 __copyright__ = '2022, feuille'
 __docformat__ = 'restructuredtext en'
 
-# _ = gettext.gettext
-# load_translations()
+_ = gettext.gettext
+load_translations()
 
 # logger = logging.getLogger(__name__)
 # loghandler=logging.StreamHandler()
