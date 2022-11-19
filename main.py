@@ -380,7 +380,7 @@ class TextDiffDialog(QDialog):
     def sizeHint(self):
         # notwendig? (stammt aus single.py)
         geom = self.screen().availableSize()
-        print('geom={0}'.format(geom))
+        # print('geom={0}'.format(geom))
         min_width = 300
         min_height = 400
         self.setMinimumWidth(min_width)
@@ -388,7 +388,7 @@ class TextDiffDialog(QDialog):
         # nh, nw = max(300, geom.height() - 400), max(400, geom.width() - 400)
         nw = max(min_width, geom.width() - min_width - 300)
         nh = max(min_height, geom.height() - min_height)
-        print('nw={0},nh={1}'.format(nw, nh))
+        # print('nw={0},nh={1}'.format(nw, nh))
         return QSize(nw, nh)
 
     @property
@@ -408,7 +408,7 @@ class TextDiffDialog(QDialog):
         # Check the number of books that are marked
         db = self.gui.current_db.new_api
         self.book_ids = self.gui.library_view.get_selected_ids()  # Get a list of book ids
-        print('self.book_ids={0}'.format(self.book_ids))
+        # print('self.book_ids={0}'.format(self.book_ids))
         book_count = len(self.book_ids)
         if book_count == 0 or book_count > 2:
             d = error_dialog(self.gui,
@@ -492,7 +492,7 @@ class TextDiffDialog(QDialog):
         # Get the book id(s) of selected book(s)
         db = self.gui.library_view.model().db  # db = self.gui.current_db.new_api
         book_ids = self.gui.library_view.get_selected_ids()  # Get a list of book ids
-        print('book_ids: {0}'.format(book_ids))  # [285, 286]
+        # print('book_ids: {0}'.format(book_ids))  # [285, 286]
         book_count = len(book_ids)
         if book_count == 0:
             return error_dialog(self.gui, _('No books selected'),
@@ -511,26 +511,26 @@ class TextDiffDialog(QDialog):
         selected_formats = []
         selected_formats.append(str(self.txt_file_content_combo_0.currentText()).upper())
         selected_formats.append(str(self.txt_file_content_combo_1.currentText()).upper())
-        print('selected_formats: {0}'.format(selected_formats))  # ['PDF', 'PDF']
+        # print('selected_formats: {0}'.format(selected_formats))  # ['PDF', 'PDF']
         for book_id in book_ids:
-            print('Fetching metadata from book_id {0}...'.format(book_id))
+            # print('Fetching metadata from book_id {0}...'.format(book_id))
             mi = db.get_metadata(book_id, index_is_id=True, get_user_categories=False)
             books_metadata.append(mi)
             available_formats.append({'book_id': book_id, 'formats': mi.formats})
-        print('available_formats={0}'.format(available_formats))  # [[book, [fromat, format]], [book, [fromat]]]
+        # print('available_formats={0}'.format(available_formats))  # [[book, [fromat, format]], [book, [fromat]]]
 
         # Fetch title and path info for the selected book formats
 
         # dataList = [{'a': 1}, {'b': 3}, {'c': 5}]
-        for index in range(len(available_formats)):
-            print('The values for the keys in index {0} are:'.format(index))
-            for key in available_formats[index]:
-                print('available_formats[{0}][{1}]={2}'.format(index, key, available_formats[index][key]))
+        # for index in range(len(available_formats)):
+            # print('The values for the keys in index {0} are:'.format(index))
+            # for key in available_formats[index]:
+                # print('available_formats[{0}][{1}]={2}'.format(index, key, available_formats[index][key]))
 
         # for format in available_formats[i][1]:  # Loop thru formats list for this book
-        print('selected_formats={0}'.format(selected_formats))
+        # print('selected_formats={0}'.format(selected_formats))
         for i in range(2):  # ToDo: check len(selected_formats)?
-            print('Fetching info for selected format #{0}'.format(i))
+            # print('Fetching info for selected format #{0}'.format(i))
             if book_count == 1:
                 j = 0
             else:
@@ -540,7 +540,7 @@ class TextDiffDialog(QDialog):
                 title = books_metadata[j].title
                 format = selected_formats[i]
                 book_formats_info.append((book_id, title, format, db.format_abspath(book_id, format, index_is_id=True)))
-        print('book_formats_info={0}'.format(book_formats_info))
+        # print('book_formats_info={0}'.format(book_formats_info))
         # [(285, 'Meister Antifers wunderbare Abenteuer', 'EPUB', 'E:\\Bibliotheken\\Abenteuer\\Jules Verne\\Meister Antifers wunderbare Abenteu (285)\\Meister Antifers wunderbare Abe - Jules Verne.epub'),
         # (285, 'Meister Antifers wunderbare Abenteuer', 'PDF', 'E:\\Bibliotheken\\Abenteuer\\Jules Verne\\Meister Antifers wunderbare Abenteu (285)\\Meister Antifers wunderbare Abe - Jules Verne.pdf')]
 
@@ -573,7 +573,7 @@ class TextDiffDialog(QDialog):
             # Convert the input format to text format, even if format is already TXT to apply convert options
             # The function returns a list of strings
             text_lines.append(self.ebook_convert(book_format_info, convert_options))
-            print('First 10 text lines: {0}'.format(text_lines[:10]))
+            # print('First 10 text lines: {0}'.format(text_lines[:10]))
 
         print('Format conversion finished. Beginning compare...')
         self.gui.status_bar.showMessage(_('Format conversion finished. Beginning compare...'))
@@ -649,11 +649,11 @@ class TextDiffDialog(QDialog):
         # calibre.ebooks.oeb.polish.container.Container object to access the contents of the result
         # of running the input format plugin
 
-        print('book_format_info={0}'.format(book_format_info))
+        # print('book_format_info={0}'.format(book_format_info))
 
         # Generate a path for the text file
         txt_format_path = self.get_txt_format_path(book_format_info)
-        print('txt_format_path={0}'.format(txt_format_path))
+        # print('txt_format_path={0}'.format(txt_format_path))
 
         # ToDo: Remove soft hyphens in input file?
         # self.remove_soft_hyphens(input_file, output_file, options)
@@ -674,14 +674,14 @@ class TextDiffDialog(QDialog):
         # with open(txt_file_path[1]) as f:
         #     txt_file_content[1] = list(line for line in (l.strip() for l in f) if line)
         if os.path.exists(txt_format_path):
-            print('Reading {0} content in list...'.format(txt_format_path))
+            # print('Reading {0} content in list...'.format(txt_format_path))
             with open(txt_format_path) as f:
                 # Read text file line by line and get rid of empty lines
                 # If you use the None as a function argument, the filter method will remove any element
                 # from the iterable that it considers to be false.
                 txt_file_content = list(filter(None, (line.rstrip() for line in f)))
-            print('File {0} has {1} lines.'.format(txt_format_path, len(txt_file_content)))
-            print('The first 10 items are: {0}'.format(txt_file_content[:10]))
+            # print('File {0} has {1} lines.'.format(txt_format_path, len(txt_file_content)))
+            # print('The first 10 items are: {0}'.format(txt_file_content[:10]))
         else:
             return error_dialog(self.gui, _('TextDiff plugin'),
                                 _('The file {0} don\'t exist. Probably conversion to text format failed.'.format(txt_format_path)),
@@ -698,7 +698,7 @@ class TextDiffDialog(QDialog):
     def create_diff(self, text_lines, book_formats_info, diff_options):
 
         print('Enter create_diff...')
-        print('diff_options={0}'.format(diff_options))
+        # print('diff_options={0}'.format(diff_options))
 
         diff = None
         # diff_strict = None
@@ -709,7 +709,7 @@ class TextDiffDialog(QDialog):
         # lambda x: x == ' ' ignores blanks
         ratio = difflib.SequenceMatcher(None, text_lines[0], text_lines[1]).ratio()
         ratio = round(ratio, 4)
-        print('ratio={0}'.format(ratio))
+        # print('ratio={0}'.format(ratio))
 
         if ratio == 1.0:
             diff = _('No differences found!')
@@ -745,15 +745,15 @@ class TextDiffDialog(QDialog):
             d._table_template = self.table_template
             # d._file_template = self.file_template
             styles = self.styles  # Do not change the template itself
-            print('diff_options[font]={0}'.format(diff_options['font']))
-            print('styles before replace={0}'.format(styles))
-            styles.replace('monospace', diff_options['font'])
-            print('styles after replace={0}'.format(styles))
+            # print('diff_options[font]={0}'.format(diff_options['font']))
+            # print('styles before replace={0}'.format(styles))
+            styles = styles.replace('monospace', diff_options['font'])
+            # print('styles after replace={0}'.format(styles))
             d._styles = styles
             # self.styles is included in self.before_table_template
             before_table_template = self.before_table_template
-            before_table_template.replace('monospace', diff_options['font'])
-            print('before_table_template={0}'.format(before_table_template))
+            before_table_template = before_table_template.replace('monospace', diff_options['font'])
+            # print('before_table_template={0}'.format(before_table_template))
 
             #     """For producing HTML side by side comparison with change highlights.
             #     This class can be used to create an HTML table (or a complete HTML file
@@ -803,7 +803,7 @@ class TextDiffDialog(QDialog):
             diff = d.make_table(text_lines[0], text_lines[1], book_attributes[0], book_attributes[1],
                                 context=diff_options['context'], numlines=diff_options['numlines'])\
             # nur für make_file: charset='utf-8'
-            print('Diff finished, diff[:1000] + diff[-200:]=' + diff[:1000] + '*****' + diff[-200:])
+            # print('Diff finished, diff[:1000] + diff[-200:]=' + diff[:1000] + '*****' + diff[-200:])
             self.gui.status_bar.showMessage(_('Diff finished.'))
 
             diff_table = diff  # preserve diff table
@@ -913,7 +913,7 @@ class TextDiffDialog(QDialog):
             if text and not line.endswith(newline):
                 text += newline
         diff = text
-        print('diff[:1000]={0}'.format(diff[:1000]))
+        # print('diff[:1000]={0}'.format(diff[:1000]))
         return diff
 
     def get_txt_format_path(self, book_format_info):
@@ -927,7 +927,7 @@ class TextDiffDialog(QDialog):
         txt_format_path = '_'.join(txt_format_path.rsplit('.', 1))
         txt_format_path = txt_format_path + '_' + str(book_id)  # Qualify text file name with book_id
         txt_format_path = txt_format_path + '.txt'  # path for converted text format
-        print('txt_format_path={0}'.format(txt_format_path))
+        # print('txt_format_path={0}'.format(txt_format_path))
         return txt_format_path
 
 
@@ -955,12 +955,12 @@ class TextDiffDialog(QDialog):
             dialog.setNameFilter(_('Text (*.txt)'))
             options = _('Text (*.txt)')
 
-        print('file_name={0}'.format(file_name))
-        print('options={0}'.format(options))
+        # print('file_name={0}'.format(file_name))
+        # print('options={0}'.format(options))
         # selectedFilter='',
         # file_path = dialog.getSaveFileName(parent=self.gui, caption=_('Save File'), dir=file_name, options=options)
         file_path = dialog.getSaveFileName(self.gui, _('Save File'), file_name, options)
-        print('file_path={0}'.format(file_path))
+        # print('file_path={0}'.format(file_path))
         # file_path=('H:/Programmierung/Python/calibre_plugins/TextDiff/diff_file_5429_9166.htnl.html', 'HTML file (*.html)')
         with open(file_path[0], 'w') as f:
             f.write(self.diff)
@@ -975,7 +975,7 @@ class TextDiffDialog(QDialog):
 
         db = self.gui.current_db.new_api  # Get access to db API
         mi = db.get_metadata(self.book_ids[0])
-        print('mi={0}'.format(mi))
+        # print('mi={0}'.format(mi))
 
         # mi=Title            : diff_file_11571_5640
         # Title sort          : Alarm in Luna IV
@@ -996,7 +996,7 @@ class TextDiffDialog(QDialog):
         mi.title = 'diff_file_' + str(self.book_ids[0])  + '_' + str(self.book_ids[1])
         mi.publisher = 'TextDiff'
         mi.pubdate = mi.timestamp = utcnow()
-        print('mi={0}'.format(mi))
+        # print('mi={0}'.format(mi))
 
         print('Create book...')
         book_id = db.create_book_entry(mi, add_duplicates=True)
@@ -1018,9 +1018,9 @@ class TextDiffDialog(QDialog):
         #         :param replace: If True replace existing format, otherwise if the format already exists, return False.
         #         :param run_hooks: If True, file type plugins are run on the format before and after being added.
         diff_io = BytesIO(str.encode(self.diff))  # convert a string to a stream object
-        print('diff_io has type {0}'.format(type(diff_io)))
+        # print('diff_io has type {0}'.format(type(diff_io)))
         rc = db.new_api.add_format(book_id, book_format, diff_io, replace=True, run_hooks=False)
-        print('rc={0}'.format(rc))
+        # print('rc={0}'.format(rc))
         # with lopen(path, 'rb') as stream:
         # db.new_api.add_format(book_id, book_format, str.encode(self.diff), replace=True, run_hooks=False)
         diff_io.close()
