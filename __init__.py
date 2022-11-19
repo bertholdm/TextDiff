@@ -10,7 +10,7 @@ from calibre.constants import DEBUG
 from calibre.customize import InterfaceActionBase
 
 __license__   = 'GPL v3'
-__copyright__ = '2022, feuille'
+__copyright__ = '2022, Michael Detambel <info@michael-detambel.de>'
 __docformat__ = 'restructuredtext en'
 
 _ = gettext.gettext

@@ -236,7 +236,7 @@ class TextDiffDialog(QDialog):
         self.wrapcolumn.setFixedWidth(30)
         self.wrapcolumn.setAlignment(Qt.AlignRight)
         self.wrapcolumn.setValidator(QIntValidator())
-        self.wrapcolumn.setMaxLength(2)
+        self.wrapcolumn.setMaxLength(3)
         self.wrapcolumn.setText('60')
         self.wrapcolumn.setToolTip(_('Specify column number where lines are broken and wrapped. 0 for not to break.'))
 
@@ -324,6 +324,8 @@ class TextDiffDialog(QDialog):
         # Initialize a statusbar for the window
         # self.statusbar = self.statusBar()
 
+        self.setModal(False)  # To select other books and formats (and refresh it) while the compare dialog i still open
+        # self.resize(QSize(700, 500))
         self.resize(self.sizeHint())
 
         self.refresh_formats()
@@ -378,7 +380,15 @@ class TextDiffDialog(QDialog):
     def sizeHint(self):
         # notwendig? (stammt aus single.py)
         geom = self.screen().availableSize()
-        nh, nw = max(300, geom.height() - 400), max(400, geom.width() - 400)
+        print('geom={0}'.format(geom))
+        min_width = 300
+        min_height = 400
+        self.setMinimumWidth(min_width)
+        self.setMinimumHeight(min_height)
+        # nh, nw = max(300, geom.height() - 400), max(400, geom.width() - 400)
+        nw = max(min_width, geom.width() - min_width - 300)
+        nh = max(min_height, geom.height() - min_height)
+        print('nw={0},nh={1}'.format(nw, nh))
         return QSize(nw, nh)
 
     @property
@@ -398,7 +408,7 @@ class TextDiffDialog(QDialog):
         # Check the number of books that are marked
         db = self.gui.current_db.new_api
         self.book_ids = self.gui.library_view.get_selected_ids()  # Get a list of book ids
-        print(self.book_ids)
+        print('self.book_ids={0}'.format(self.book_ids))
         book_count = len(self.book_ids)
         if book_count == 0 or book_count > 2:
             d = error_dialog(self.gui,
@@ -412,7 +422,12 @@ class TextDiffDialog(QDialog):
             # Two books with at least two formats in sum
             for i in range(2):
                 mi = db.get_metadata(self.book_ids[i])
-                title, formats = mi.title, mi.formats
+                # Check if each book has a format
+                if mi.formats is None:
+                    msg = _('Book {0} has no formats!'.format(i + 1))
+                    d = error_dialog(self.gui, _('TextDiff error'), msg, show_copy_button=False)
+                    d.exec_()
+                    return None
                 # ToDo: How name widgets for looping?
                 if i == 0:
                     self.file_info_0.setText(str(self.book_ids[i]) + '=' + mi.title)
@@ -425,6 +440,12 @@ class TextDiffDialog(QDialog):
         else:
             # One book with at least two formats
             mi = db.get_metadata(self.book_ids[0])
+            # Check if each book has a format
+            if mi.formats is None:
+                msg = _('Book has no formats!')
+                d = error_dialog(self.gui, _('TextDiff error'), msg, show_copy_button=False)
+                d.exec_()
+                return None
             for i in range(2):
                 if i == 0:
                     self.file_info_0.setText(str(self.book_ids[0]) + '=' + mi.title)
@@ -475,10 +496,12 @@ class TextDiffDialog(QDialog):
         book_count = len(book_ids)
         if book_count == 0:
             return error_dialog(self.gui, _('No books selected'),
-                            _('You must select one book with more than one format or two books to perform this action.'), show=True)
+                                _('You must select one book with more than one format or two books to perform this action.'),
+                                show=True)
         if book_count > 2:
             return error_dialog(self.gui, _('Too much books selected'),
-                                _('You must select one book with more than one format or two books to perform this action.'), show=True)
+                                _('You must select one book with more than one format or two books to perform this action.'),
+                                show=True)
 
         available_formats = []
         books_metadata = []
@@ -722,7 +745,10 @@ class TextDiffDialog(QDialog):
             d._table_template = self.table_template
             # d._file_template = self.file_template
             styles = self.styles  # Do not change the template itself
+            print('diff_options[font]={0}'.format(diff_options['font']))
+            print('styles before replace={0}'.format(styles))
             styles.replace('monospace', diff_options['font'])
+            print('styles after replace={0}'.format(styles))
             d._styles = styles
             # self.styles is included in self.before_table_template
             before_table_template = self.before_table_template
@@ -797,7 +823,7 @@ class TextDiffDialog(QDialog):
             # <th colspan="2" class="diff_header">Fahigkeiten unbekannt - K. H. Scheer_epub_943.txt</th>
             # </tr>
             # </thead>
-            diff = re.sub('<th colspan="2"', '<th class="diff_header">&nbsp;</th><th>', diff)
+            diff = re.sub('<th colspan="2"', '<th class="diff_header">&nbsp;</th><th', diff)
 
             # Wrap html around diff table
             diff = before_table_template + diff + self.after_table_template
@@ -907,9 +933,7 @@ class TextDiffDialog(QDialog):
 
     def copy_diff_file(self):
         # paste entire text in compare result to clipboard
-        cb = QApplication.clipboard()
-        cb.clear()
-        cb.setText(self.text_browser.copy())
+        QApplication.clipboard().setText(self.text_browser.toPlainText())
 
 
     def save_diff_file(self):
