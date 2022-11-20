@@ -13,6 +13,7 @@ __license__   = 'GPL v3'
 __copyright__ = '2022, Michael Detambel <info@michael-detambel.de>'
 __docformat__ = 'restructuredtext en'
 
+# Load translations
 _ = gettext.gettext
 load_translations()
 
@@ -28,7 +29,7 @@ load_translations()
 #     loghandler.setLevel(logging.CRITICAL)
 #     logger.setLevel(logging.CRITICAL)
 
-# pulls in translation files for _() strings
+
 # load_translations() added in calibre 1.9
 # load_translations()
 
@@ -44,7 +45,7 @@ class TextDiffBase(InterfaceActionBase):
     calibre utilities to run without needing to load the GUI libraries.
     '''
     name                    = 'TextDiff'
-    description             = _('UI plugin to find differences between two texts.')
+    description             = _('A Calibre GUI plugin to find text differences in two book formats.')
     supported_platforms     = ['windows', 'osx', 'linux']
     author                  = 'Michael Detambel, <info@michael-detambel.de>'
     version                 = (1, 0, 0)
