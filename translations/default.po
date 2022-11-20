@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Perrypedia\n"
-"POT-Creation-Date: 2022-11-20 11:39+0100\n"
-"PO-Revision-Date: 2022-11-20 11:39+0100\n"
+"POT-Creation-Date: 2022-11-20 14:00+0100\n"
+"PO-Revision-Date: 2022-11-20 14:00+0100\n"
 "Last-Translator: Michael Detambel <info@michael-detambel.de>\n"
 "Language-Team: Michael Detambel\n"
 "Language: en\n"
@@ -14,20 +14,16 @@ msgstr ""
 "X-Poedit-Basepath: ..\n"
 "X-Poedit-SearchPath-0: .\n"
 
-#: __init__.py:47
-msgid "UI plugin to find differences between two texts."
+#: __init__.py:48
+msgid "A Calibre GUI plugin to find text differences in two book formats."
 msgstr ""
 
-#: config.py:50
+#: config.py:53
 msgid "Config"
 msgstr ""
 
-#: config.py:53 main.py:243
-msgid "Compare"
-msgstr ""
-
-#: config.py:94
-msgid "These settings control the basic features of the plugin."
+#: config.py:96
+msgid "These settings control the basic features of the plugin. Not used yet!"
 msgstr ""
 
 #: main.py:149
@@ -89,6 +85,10 @@ msgstr ""
 #: main.py:241
 msgid ""
 "Specify column number where lines are broken and wrapped. 0 for not to break."
+msgstr ""
+
+#: main.py:243
+msgid "Compare"
 msgstr ""
 
 #: main.py:254
@@ -229,30 +229,26 @@ msgstr ""
 msgid "Book with diff content as format added"
 msgstr ""
 
-#: ui.py:28
+#: ui.py:29
 msgid "TextDiff"
 msgstr ""
 
-#: ui.py:28
+#: ui.py:29
 msgid "Run the TextDiff Plugin."
 msgstr ""
 
-#: ui.py:72
+#: ui.py:73
 msgid "Compyare..."
 msgstr ""
 
-#: ui.py:73
+#: ui.py:74
 msgid "Settings..."
 msgstr ""
 
-#: ui.py:74
+#: ui.py:75
 msgid "About..."
 msgstr ""
 
-#: ui.py:75
+#: ui.py:76
 msgid "Help..."
-msgstr ""
-
-#: ui.py:132
-msgid "About TextDiff"
 msgstr ""

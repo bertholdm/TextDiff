@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Perrypedia\n"
-"POT-Creation-Date: 2022-11-19 16:12+0100\n"
-"PO-Revision-Date: 2022-11-19 16:14+0100\n"
+"POT-Creation-Date: 2022-11-20 14:00+0100\n"
+"PO-Revision-Date: 2022-11-20 14:00+0100\n"
 "Last-Translator: Michael Detambel <info@michael-detambel.de>\n"
 "Language-Team: Michael Detambel, <info@michael-detambel.de>\n"
 "Language: de_DE\n"
@@ -14,22 +14,21 @@ msgstr ""
 "X-Poedit-Basepath: ..\n"
 "X-Poedit-SearchPath-0: .\n"
 
-#: __init__.py:47
-msgid "UI plugin to find differences between two texts."
+#: __init__.py:48
+#, fuzzy
+#| msgid "UI plugin to find differences between two texts."
+msgid "A Calibre GUI plugin to find text differences in two book formats."
 msgstr "UI Plugin zum Finden von Unterschieden zwischen zwei Texten."
 
-#: config.py:50
+#: config.py:53
 msgid "Config"
 msgstr "Konfiguration"
 
-#: config.py:53 main.py:243
-msgid "Compare"
-msgstr "Vergleiche"
-
-#: config.py:94
-msgid "These settings control the basic features of the plugin."
+#: config.py:96
+msgid "These settings control the basic features of the plugin. Not used yet!"
 msgstr ""
-"Diese Einstellungen legen die grundlegenden Eigenschaften des Plugins fest."
+"Diese Einstellungen legen die grundlegenden Eigenschaften des Plugins fest. "
+"Z. Z. nicht verwendet!"
 
 #: main.py:149
 msgid "1st file (left):"
@@ -100,6 +99,10 @@ msgid ""
 msgstr ""
 "Die Spalte angeben, ab der Zeilen umgebrochen werden sollen. Null (0) für "
 "keinen Umbruch."
+
+#: main.py:243
+msgid "Compare"
+msgstr "Vergleiche"
 
 #: main.py:254
 msgid "A measure of the sequences’ similarity as a float in the range [0, 1]."
@@ -252,33 +255,32 @@ msgstr "Speichere Vergleichsergebnis als Buch."
 msgid "Book with diff content as format added"
 msgstr "Buch mit dem Ergebnis des Vergleichs als Format hinzugefügt."
 
-#: ui.py:28
+#: ui.py:29
 msgid "TextDiff"
 msgstr "TextDiff"
 
-#: ui.py:28
+#: ui.py:29
 msgid "Run the TextDiff Plugin."
 msgstr "TextDiff-Plugin starten."
 
-#: ui.py:72
+#: ui.py:73
 msgid "Compyare..."
 msgstr "Vergleiche..."
 
-#: ui.py:73
+#: ui.py:74
 msgid "Settings..."
 msgstr "Einstellungen..."
 
-#: ui.py:74
+#: ui.py:75
 msgid "About..."
 msgstr "Über"
 
-#: ui.py:75
+#: ui.py:76
 msgid "Help..."
 msgstr "Hilfe..."
 
-#: ui.py:132
-msgid "About TextDiff"
-msgstr "Über TextDiff"
+#~ msgid "About TextDiff"
+#~ msgstr "Über TextDiff"
 
 #~ msgid ""
 #~ "No differences found in text. However, there may be differences in "

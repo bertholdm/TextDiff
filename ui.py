@@ -12,6 +12,7 @@ from calibre_plugins.textdiff.main import TextDiffDialog
 
 DEFAULT_ICON = 'images/icon.png'
 
+# Load translations
 _ = gettext.gettext
 load_translations()
 
@@ -126,12 +127,7 @@ class TextDiffAction(InterfaceAction):
         # get_resources will return a dictionary mapping names to bytes. Names that
         # are not found in the zip file will not be in the returned dictionary.
         text = get_resources('about.txt')
-        QMessageBox.about(self, 'About the TextDiff Plugin', text.decode('utf-8'))
-        qb = QMessageBox(self.gui)
-        qb.setText(text.decode('utf-8'))  # % ActionHyphenateThis.version)
-        qb.setWindowTitle(_('About TextDiff'))
-        qb.setIconPixmap(get_icons('icons/icon.png').pixmap(128, 128))
-        qb.show()
+        QMessageBox.about(self.gui, 'About the TextDiff Plugin', text.decode('utf-8'))
 
     def help(self):
         pass
