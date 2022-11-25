@@ -572,11 +572,16 @@ class TextDiffDialog(QDialog):
                                 show=True)
 
         # ToDo: Start progressbar?
+        self.progressbar(_("Starting compare..."), on_top=True)
+        self.set_progressbar_label(_('Fetching metadata...'))
+        self.show_progressbar(2)
+
         # size = 0
         for book_format_info in book_formats_info:
             fmt_metadata = self.db.format_metadata(book_format_info[0], book_format_info[2])
             size = fmt_metadata['size']
             print('size={0}'.format(size))
+            self.increment_progressbar()
 
         text_formats = []
         # convert_options = ' -v -v –enable-heuristics '
@@ -663,6 +668,7 @@ class TextDiffDialog(QDialog):
 
         QApplication.restoreOverrideCursor()
         self.gui.activateWindow()  # Bring window in front
+        self.hide_progressbar()
 
         overall_stop_time = time.perf_counter()
         print("Time for compare was total: {0:3.4f} seconds".format(overall_stop_time - overall_start_time))
@@ -1134,7 +1140,13 @@ class TextDiffDialog(QDialog):
         self.box.show()
 
     def progressbar(self, window_title, on_top=False):
+
+        # ToDo Progressbar not defied
+
         self.pb = ProgressBar(parent=self.gui, window_title=window_title, on_top=on_top)
+
+
+
         self.pb.show()
 
     def show_progressbar(self, maximum_count):
