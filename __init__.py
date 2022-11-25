@@ -48,7 +48,9 @@ class TextDiffBase(InterfaceActionBase):
     version                 = (1, 1, 0)
     # History
     # Version 1.1.0 - 11-25-2022
-    # - Invert HTML back-color in dark mode
+    # - Invert HTML back-color in dark mode (tanks to Comfy.n)
+    # - Change tool button behavior: show compare dialog when icon clicked, show menu when arrow clicked (tanks to Comfy.n)
+    # - show progress bar when compare is active
     # Version 1.0.0 - 11-17-2022
     # - Initial release
     minimum_calibre_version = (5, 0, 0)
