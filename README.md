@@ -14,10 +14,10 @@ The last thing may also occur, when the source format has no text content (as sc
 The detailed workflow is as follows:
 1. Select a book with at least two formats or two books with at least one format each to compare.
 2. Chose two formats.
-2. Chose the output format an other comparison options.
+2. Chose the output format and other comparison options.
 3. Hit "Compare".
 4. The formats are converted and compared and the output is displayed in the output window. A ratio is also computed and displayed.
-5. If wished, copy the comparison output to the clipboard and/or save it to a file and/or save it as book with an suitable format(HTML or text).
+5. If wished, copy the comparison output to the clipboard and/or save it to a file and/or save it as book with an suitable format (HTML or text).
 
 If you want to compare other formats, repeat step 1 and hit the "Refresh formats"  button. Then repeat steps 2 - 5.
 The "Compare"-Dialog is modeless, what permits to move it around and touch the Calibre screen.

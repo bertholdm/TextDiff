@@ -48,7 +48,12 @@ class TextDiffBase(InterfaceActionBase):
     description             = _('A Calibre GUI plugin to find text differences in two book formats.')
     supported_platforms     = ['windows', 'osx', 'linux']
     author                  = 'Michael Detambel, <info@michael-detambel.de>'
-    version                 = (1, 0, 0)
+    version                 = (1, 1, 0)
+    # History
+    # Version 1.1.0 - 11-25-2022
+    # - Ajust HTML highlighting for dark mode
+    # Version 1.0.0 - 11-17-2022
+    # - Initial release
     minimum_calibre_version = (5, 0, 0)
     can_be_disabled         = True
 
@@ -57,9 +62,6 @@ class TextDiffBase(InterfaceActionBase):
     #: The specified class must be defined in the specified module.
     actual_plugin = 'calibre_plugins.textdiff.ui:TextDiffAction'
 
-    # History
-    # Version 1.0.0 - 11-17-2022
-    # - Initial release
 
     def is_customizable(self):
         '''
