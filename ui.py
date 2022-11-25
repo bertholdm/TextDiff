@@ -27,7 +27,7 @@ class TextDiffAction(InterfaceAction):
     # (text, icon_path, tooltip, keyboard shortcut or None)
     # icon_path isn't in the zip--icon loaded below.
     action_spec = (_('TextDiff'), None, _('Run the TextDiff Plugin.'), 'Ctrl+Shift+F12')
-    popup_type = QToolButton.InstantPopup  # make button menu drop down only
+    popup_type = QToolButton.MenuButtonPopup  # start action when icon clicked, show menu when arrow clicked
     action_type = 'current'
     # action_type = 'global'
 
@@ -50,7 +50,7 @@ class TextDiffAction(InterfaceAction):
         # plugin code. It loads icons from the plugin zip file. It returns
         # QIcon objects, if you want the actual data, use the analogous
         # get_resources builtin function.
-        icon = get_icons('images/icon.png', 'TextDiff')
+        icon = get_icons(DEFAULT_ICON, 'TextDiff')
         # Note that if you are loading more than one icon, for performance, you
         # should pass a list of names to get_icons. In this case, get_icons
         # will return a dictionary mapping names to QIcons. Names that
@@ -67,10 +67,11 @@ class TextDiffAction(InterfaceAction):
         # The qaction is automatically created from the action_spec defined above
         self.qaction.setIcon(icon)
         self.qaction.triggered.connect(self.show_dialog)
+        self.qaction.clicked.connect(self.show_dialog)
 
     def load_menu(self):
         self.menu.clear()
-        self.menu.addAction(_('Compyare...'), self.show_dialog)  # compare
+        self.menu.addAction(_('Compyare...'), self.show_dialog)  # compare dialog
         self.menu.addAction(_('Settings...'), self.show_configuration)
         self.menu.addAction(_('About...'), self.about)
         self.menu.addAction(_('Help...'), self.help)

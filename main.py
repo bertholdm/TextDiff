@@ -261,7 +261,7 @@ class TextDiffDialog(QDialog):
         self.text_browser.setAcceptRichText(True)
         self.text_browser.setOpenExternalLinks(False)
 
-        self.ratio_label = QLabel('Ratio is:')
+        self.ratio_label = QLabel(_('Ratio is:'))
         self.ratio_label.setObjectName('ratio_label')
         self.ratio = QLineEdit(self)
         # self.ratio.setEnabled(False)
@@ -1132,6 +1132,28 @@ class TextDiffDialog(QDialog):
         self.box.textWindow.setReadOnly(True)
         self.box.resize(600, 500)
         self.box.show()
+
+    def progressbar(self, window_title, on_top=False):
+        self.pb = ProgressBar(parent=self.gui, window_title=window_title, on_top=on_top)
+        self.pb.show()
+
+    def show_progressbar(self, maximum_count):
+        if self.pb:
+            self.pb.set_maximum(maximum_count)
+            self.pb.set_value(0)
+            self.pb.show()
+
+    def set_progressbar_label(self, label):
+        if self.pb:
+            self.pb.set_label(label)
+
+    def increment_progressbar(self):
+        if self.pb:
+            self.pb.increment()
+
+    def hide_progressbar(self):
+        if self.pb:
+            self.pb.hide()
 
         
 class FileFormatComboBox(QComboBox):

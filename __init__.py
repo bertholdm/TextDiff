@@ -30,9 +30,6 @@ load_translations()
 #     logger.setLevel(logging.CRITICAL)
 
 
-# load_translations() added in calibre 1.9
-# load_translations()
-
 ## Apparently the name for this class doesn't matter.
 class TextDiffBase(InterfaceActionBase):
     '''
@@ -51,7 +48,7 @@ class TextDiffBase(InterfaceActionBase):
     version                 = (1, 1, 0)
     # History
     # Version 1.1.0 - 11-25-2022
-    # - Ajust HTML highlighting for dark mode
+    # - Invert HTML back-color in dark mode
     # Version 1.0.0 - 11-17-2022
     # - Initial release
     minimum_calibre_version = (5, 0, 0)
