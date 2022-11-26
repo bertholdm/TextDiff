@@ -60,11 +60,11 @@ class TextDiffDialog(QDialog):
                    cellspacing="0" cellpadding="0">
                <colgroup>
                    <col style="width:2%%">
-                   <col style="width:4%%">
-                   <col style="width:44%%">
+                   <col style="width:5%%">
+                   <col style="width:43%%">
                    <col style="width:2%%">
-                   <col style="width:4%%">
-                   <col style="width:44%%">
+                   <col style="width:5%%">
+                   <col style="width:43%%">
                </colgroup>
                %(header_row)s
                <tbody>
@@ -117,9 +117,6 @@ class TextDiffDialog(QDialog):
         .diff_add {background-color:#aaffaa}
         .diff_chg {background-color:#ffff77}
         .diff_sub {background-color:#ffaaaa}
-        .diff_add.dark-mode {background-color:#550055}
-        .diff_chg.dark-mode {background-color:#000088}
-        .diff_sub.dark-mode {background-color:#005555}
         """
 
         # <meta http-equiv="Content-Type" content="text/html; charset=%(charset)s" />
@@ -192,17 +189,6 @@ class TextDiffDialog(QDialog):
         self.fontfamily_combo.setObjectName("fontfamily_combo")
         fontfamilies = ['sans-serif', 'serif', 'monospace', 'system-ui', 'ui-serif', 'ui-sans-serif', 'ui-monospace']
         self.fontfamily_combo.addItems(x for x in fontfamilies)
-
-        # Switch for dark mode (to modify highlight css)
-        # Can Metadata Source plugin detect if calibre is running in dark mode?
-        # When checking: "is_dark_theme = QApplication.instance().is_dark_theme" I always get false.
-        # Kovid: No they run in worker processes and/or the command line.
-        # I see. I solved this by saving the information about the used dark theme directly in the plugin configuration,
-        # so the user can turn it on and off himself.
-        self.is_dark_mode = QCheckBox(_('Calibre is in dark mode'))
-        self.is_dark_mode.setEnabled(True)
-        self.is_dark_mode.setChecked(False)
-        self.is_dark_mode.setToolTip(_('When using dark mode, check this to optimize html output.'))
 
         # The table can be generated in either full or contextual difference mode
         # Only for HtmlDiff! context=True, numlines=10
@@ -296,9 +282,6 @@ class TextDiffDialog(QDialog):
         self.option_box1.addWidget(self.fontfamily_combo)
         self.grid_layout.addLayout(self.option_box1, 4, 0, 1, 2)
         # row 5:
-        self.option_box5= QHBoxLayout()
-        self.option_box5.addWidget(self.is_dark_mode)
-        self.grid_layout.addLayout(self.option_box5, 5, 1, 1, 2)
         # row 6
         self.option_box2= QHBoxLayout()
         self.option_box2.addWidget(self.context)   # Only for HtmlDiff
@@ -572,16 +555,16 @@ class TextDiffDialog(QDialog):
                                 show=True)
 
         # ToDo: Start progressbar?
-        self.progressbar(_("Starting compare..."), on_top=True)
-        self.set_progressbar_label(_('Fetching metadata...'))
-        self.show_progressbar(2)
+        # self.progressbar(_("Starting compare..."), on_top=True)
+        # self.set_progressbar_label(_('Fetching metadata...'))
+        # self.show_progressbar(2)
 
         # size = 0
         for book_format_info in book_formats_info:
             fmt_metadata = self.db.format_metadata(book_format_info[0], book_format_info[2])
             size = fmt_metadata['size']
-            print('size={0}'.format(size))
-            self.increment_progressbar()
+            # print('size={0}'.format(size))
+            # self.increment_progressbar()
 
         text_formats = []
         # convert_options = ' -v -v –enable-heuristics '
@@ -602,8 +585,8 @@ class TextDiffDialog(QDialog):
             text_lines.append(self.ebook_convert(book_format_info, convert_options))
             # print('First 10 text lines: {0}'.format(text_lines[:10]))
 
-        print("Time for compare() so far: {0:3.4f} seconds".format(time.perf_counter() - overall_start_time))
-        print('Format conversion finished. Beginning compare...')
+        # print("Time for compare() so far: {0:3.4f} seconds".format(time.perf_counter() - overall_start_time))
+        # print('Format conversion finished. Beginning compare...')
         self.gui.status_bar.showMessage(_('Format conversion finished. Beginning compare...'))
 
         diff_options = {}
@@ -629,14 +612,14 @@ class TextDiffDialog(QDialog):
         # Show diff result in GUI
         self.text_browser.clear()
 
-        print("Time for compare() so far: {0:3.4f} seconds".format(time.perf_counter() - overall_start_time))
+        # print("Time for compare() so far: {0:3.4f} seconds".format(time.perf_counter() - overall_start_time))
 
         if ratio == 1.0:
             self.text_browser.setPlainText(
                 _('No differences found in text. However, there may be differences in metadata, formatting or MIME content.'))
         else:
 
-            print('Putting result to text_browser window...')
+            print(_('Putting result in text browser window...'))
 
             if 'HTMLDIFF' not in diff_options['difftype']:
                 font = QFont()
@@ -668,10 +651,10 @@ class TextDiffDialog(QDialog):
 
         QApplication.restoreOverrideCursor()
         self.gui.activateWindow()  # Bring window in front
-        self.hide_progressbar()
+        # self.hide_progressbar()
 
         overall_stop_time = time.perf_counter()
-        print("Time for compare was total: {0:3.4f} seconds".format(overall_stop_time - overall_start_time))
+        # print("Time for compare was total: {0:3.4f} seconds".format(overall_stop_time - overall_start_time))
 
 
     def remove_soft_hyphens(self, input_file, output_file, options):
@@ -698,24 +681,24 @@ class TextDiffDialog(QDialog):
         txt_format_path = self.get_txt_format_path(book_format_info)
         # print('txt_format_path={0}'.format(txt_format_path))
 
-        print("Time for ebook_convert so far: {0:3.4f} seconds".format(time.perf_counter() - start_time))
+        # print("Time for ebook_convert so far: {0:3.4f} seconds".format(time.perf_counter() - start_time))
 
         # ToDo: Remove soft hyphens in input file?
         # self.remove_soft_hyphens(input_file, output_file, options)
 
-        print('Starting ebook-convert...')
+        print(_('Starting ebook_convert()...'))
         self.gui.status_bar.showMessage(_('Starting ebook-convert...'))
 
         # Remove any old file
         if os.path.exists(txt_format_path):
             os.remove(txt_format_path)
 
-        print("Time for ebook_convert so far: {0:3.4f} seconds".format(time.perf_counter() - start_time))
+        # print("Time for ebook_convert so far: {0:3.4f} seconds".format(time.perf_counter() - start_time))
 
         os.system('ebook-convert ' + '"' + book_format_info[3] + '"' + ' "' +
                   txt_format_path + '"' + convert_options)
 
-        print("Time for ebook_convert so far: {0:3.4f} seconds".format(time.perf_counter() - start_time))
+        # print("Time for ebook_convert so far: {0:3.4f} seconds".format(time.perf_counter() - start_time))
 
         # "readlines" returns a list containing the lines.
         # with open(txt_file_path[0]) as f:
@@ -736,22 +719,22 @@ class TextDiffDialog(QDialog):
                                 _('The file {0} don\'t exist. Probably conversion to text format failed.'.format(txt_format_path)),
                                 show=True)
 
-        print("Time for ebook_convert so far: {0:3.4f} seconds".format(time.perf_counter() - start_time))
+        # print("Time for ebook_convert so far: {0:3.4f} seconds".format(time.perf_counter() - start_time))
 
         # Delete the generated text file
-        print('Deleting temp file...')
+        print(_('Deleting temp file...'))
         if os.path.exists(txt_format_path):
             os.remove(txt_format_path)
 
         print(_('Finishing ebook_convert().'))
-        print("Time for ebook_convert so far: {0:3.4f} seconds".format(time.perf_counter() - start_time))
+        # print("Time for ebook_convert so far: {0:3.4f} seconds".format(time.perf_counter() - start_time))
 
         return txt_file_content
 
 
     def create_diff(self, text_lines, book_formats_info, diff_options):
 
-        print('Enter create_diff...')
+        print(_('Enter create_diff()...'))
         # print('diff_options={0}'.format(diff_options))
 
         diff = None
@@ -765,7 +748,7 @@ class TextDiffDialog(QDialog):
         start_time = time.perf_counter()
         ratio = difflib.SequenceMatcher(None, text_lines[0], text_lines[1]).ratio()
         stop_time = time.perf_counter()
-        print("Time for calculate ratio was: {0:3.4f} seconds".format(stop_time - start_time))
+        # print("Time for calculate ratio was: {0:3.4f} seconds".format(stop_time - start_time))
         ratio = round(ratio, 4)
         # print('ratio={0}'.format(ratio))
 
@@ -779,7 +762,7 @@ class TextDiffDialog(QDialog):
         # ndiff: linejunk=None, charjunk=IS_CHARACTER_JUNK)
         # SequenceMatcher: ratio
 
-        print("Time for create_diff so far: {0:3.4f} seconds".format(time.perf_counter() - start_time))
+        # print("Time for create_diff so far: {0:3.4f} seconds".format(time.perf_counter() - start_time))
 
         txt_format_paths = []
         for book_format_info in book_formats_info:
@@ -788,13 +771,13 @@ class TextDiffDialog(QDialog):
         # Start timer
         start_time = time.perf_counter()
 
-        print("Time for create_diff so far: {0:3.4f} seconds".format(time.perf_counter() - start_time))
+        # print("Time for create_diff so far: {0:3.4f} seconds".format(time.perf_counter() - start_time))
 
         # https://docs.python.org/3/library/difflib.html
         if diff_options['difftype'] == 'HTML':
 
             # ToDo: linejunk, charjunk as parm
-            print('Instantiate HtmlDiff...')
+            print(_('Instantiate HtmlDiff...'))
             # This class can be used to create an HTML table (or a complete HTML file containing the table) showing
             # a side by side, line by line comparison of text with inter-line and intra-line change highlights.
             # The table can be generated in either full or contextual difference mode.
@@ -814,29 +797,25 @@ class TextDiffDialog(QDialog):
             # print('styles before replace={0}'.format(styles))
             styles = styles.replace('monospace', diff_options['font'])
             # print('styles after replace={0}'.format(styles))
-            if self.is_dark_mode.isChecked():
-                # print("is_dark_mode is checked.")
-                # styles = styles.replace('background-color:#aaffaa', 'background-color:#550055')
-                # styles = styles.replace('background-color:#ffff77', 'background-color:#000088')
-                # styles = styles.replace('background-color:#ffaaaa', 'background-color:#005555')
+            # In dark mode, QTextBrowser reverses automatically the text color (b/w),
+            # but not the background color (used to highlight diffs via css)
+            if QApplication.instance().is_dark_theme:
                 styles = styles.replace('e0e0e0', '1f1f1f')  # diff_header
                 styles = styles.replace('c0c0c0', '3f3f3f')  # diff_next
                 styles = styles.replace('aaffaa', '550055')  # diff_add
                 styles = styles.replace('ffff77', '000088')  # diff_chg
                 styles = styles.replace('ffaaaa', '005555')  # duiff_sub
-            else:
-                pass  # print("is_dark_mode is unchecked.")
             d._styles = styles
             # self.styles is included in self.before_table_template
             before_table_template = self.before_table_template
             before_table_template = before_table_template.replace('monospace', diff_options['font'])
-            if self.is_dark_mode.isChecked():
+            if QApplication.instance().is_dark_theme:
                 before_table_template = before_table_template.replace('e0e0e0', '1f1f1f')  # diff_header
                 before_table_template = before_table_template.replace('c0c0c0', '3f3f3f')  # diff_next
                 before_table_template = before_table_template.replace('aaffaa', '550055')  # diff_add
                 before_table_template = before_table_template.replace('ffff77', '000088')  # diff_chg
                 before_table_template = before_table_template.replace('ffaaaa', '005555')  # duiff_sub
-            print('before_table_template={0}'.format(before_table_template))
+            # print('before_table_template={0}'.format(before_table_template))
 
             #     """For producing HTML side by side comparison with change highlights.
             #     This class can be used to create an HTML table (or a complete HTML file
@@ -869,7 +848,7 @@ class TextDiffDialog(QDialog):
             # difference highlight when using the “next” hyperlinks (setting to zero would cause the “next” hyperlinks
             # to place the next difference highlight at the top of the browser without any leading context).
 
-            print('Calling HtmlDiff.make_table...')
+            print(_('Calling HtmlDiff.make_table()...'))
 
             # make_table(fromlines, tolines, fromdesc='', todesc='', context=False, numlines=5)
             # Compares fromlines and tolines (lists of strings) and returns a string which is a complete HTML table showing line by line differences with inter-line and intra-line changes highlighted.
@@ -985,7 +964,7 @@ class TextDiffDialog(QDialog):
             diff = (_('Unknown compare option!'))
 
         stop_time = time.perf_counter()
-        print("Time for calculate diff was: {0:3.4f} seconds".format(stop_time - start_time))
+        # print("Time for calculate diff was: {0:3.4f} seconds".format(stop_time - start_time))
 
         return diff, ratio
 
@@ -1025,7 +1004,7 @@ class TextDiffDialog(QDialog):
     def save_diff_file(self):
         # Schreiben erst wenn "Speichern"-Button gedrückt
 
-        print('Enter save_diff_file()...')
+        print(_('Enter save_diff_file()...'))
 
         dialog = QFileDialog(self.gui)
         dialog.setFileMode(QFileDialog.FileMode.AnyFile)
@@ -1054,7 +1033,7 @@ class TextDiffDialog(QDialog):
 
     def add_book(self):
 
-        print('Enter add_book()...')
+        print(_('Enter add_book()...'))
         self.gui.status_bar.showMessage(_('Adding book...'))
 
         # https://manual.calibre-ebook.com/de/db_api.html
@@ -1084,11 +1063,11 @@ class TextDiffDialog(QDialog):
         mi.pubdate = mi.timestamp = utcnow()
         # print('mi={0}'.format(mi))
 
-        print('Create book...')
+        print(_('Create book...'))
         book_id = db.create_book_entry(mi, add_duplicates=True)
         db.set_metadata(book_id, mi)
         # Set cover with config defaults
-        print('Setting cover...')
+        print(_('Setting cover...'))
         coverdata = generate_cover(mi)  # generate_cover_opts
         db.new_api.set_cover({book_id:coverdata})
         # Save diff as format (txt or html) (diff is often too big for in time handlinm in comment field)
@@ -1096,7 +1075,7 @@ class TextDiffDialog(QDialog):
            book_format = 'HTML'
         else:
             book_format = 'TXT'
-        print('Adding format...')
+        print(_('Adding format...'))
         # def add_format(self, book_id, fmt, stream_or_path, replace=True, run_hooks=True, dbapi=None):
         #         '''
         #         Add a format to the specified book. Return True if the format was added successfully.
@@ -1138,34 +1117,6 @@ class TextDiffDialog(QDialog):
         self.box.textWindow.setReadOnly(True)
         self.box.resize(600, 500)
         self.box.show()
-
-    def progressbar(self, window_title, on_top=False):
-
-        # ToDo Progressbar not defied
-
-        self.pb = ProgressBar(parent=self.gui, window_title=window_title, on_top=on_top)
-
-
-
-        self.pb.show()
-
-    def show_progressbar(self, maximum_count):
-        if self.pb:
-            self.pb.set_maximum(maximum_count)
-            self.pb.set_value(0)
-            self.pb.show()
-
-    def set_progressbar_label(self, label):
-        if self.pb:
-            self.pb.set_label(label)
-
-    def increment_progressbar(self):
-        if self.pb:
-            self.pb.increment()
-
-    def hide_progressbar(self):
-        if self.pb:
-            self.pb.hide()
 
         
 class FileFormatComboBox(QComboBox):

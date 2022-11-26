@@ -1,4 +1,4 @@
-[GUI Plugin] TextDiff - Version 1.0.0 - 11-20-2022
+[GUI Plugin] TextDiff - Version 1.1.0 - 11-26-2022
 
 A Calibre GUI plugin for finding text differences in two book formats.
 
@@ -27,6 +27,8 @@ Planned Features:
 -----------------
 - Remove soft hyphens before conversion.
 - Custom characters to ignore ("char junk", e. g. "" vs. »«). 
+- Optimierung des Füllens des Textbrowser-Widgets (HTML-Rendering verursacht 2/3 der Laufzeit!).
+- Fortschrittsanzeige.
 
 Limitations:
 ------------
@@ -34,8 +36,11 @@ Limitations:
 
 Version History:
 ----------------
-v.1.0.0 11-20-2022
-Initial release.
+Version 1.1.0 - 11-26-2022
+- Changed tool button behavior: show compare dialog when icon clicked, show menu when arrow clicked (thanks to Comfy.n)
+- Inverting HTML/CSS back colors (highlighting diffs) in dark mode (thanks to Comfy.n and Kovidgoyal)
+Version 1.0.0 11-20-2022
+- Initial release.
 
 Installation:
 -------------
@@ -47,7 +52,7 @@ If you find any issues or have suggestions, please report them in this thread.
 
 ---
 
-[GUI-Plugin] TextDiff - Version 1.0.0 - 20.11.2022
+[GUI-Plugin] TextDiff - Version 1.1.0 - 26.11.2022
 
 Ein Calibre GUI-Plugin zum Finden von Textunterschieden in zwei Buchformaten.
 
@@ -83,7 +88,10 @@ Einschränkungen:
 
 Versionsgeschichte:
 -------------------
-v.1.0.0 20.11.2022
+Version 1.1.0 - 26.11.2022
+- Geändertes Verhalten der Werkzeugschaltfläche: Vergleichsdialog anzeigen, wenn auf das Symbol geklickt wird, Menü anzeigen, wenn auf den Pfeil geklickt wird (Dank an Comfy.n)
+- Invertieren von HTML/CSS-Hintergrundfarben (Hervorheben von Unterschieden) im Dunkelmodus (Dank an Comfy.n und Kovidgoyal)
+Version 1.0.0 20.11.2022
 Erstveröffentlichung.
 
 Installation:
