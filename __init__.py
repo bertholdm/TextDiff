@@ -45,8 +45,10 @@ class TextDiffBase(InterfaceActionBase):
     description             = _('A Calibre GUI plugin to find text differences in two book formats.')
     supported_platforms     = ['windows', 'osx', 'linux']
     author                  = 'Michael Detambel, <info@michael-detambel.de>'
-    version                 = (1, 1, 0)
+    version                 = (1, 1, 1)
     # History
+    # Version 1.1.1 - 11-29-2022
+    # - Handle save file dialog with no user selection
     # Version 1.1.0 - 11-26-2022
     # - Changed tool button behavior: show compare dialog when icon clicked, show menu when arrow clicked (thanks to Comfy.n)
     # - Inverting HTML/CSS back colors (highlighting diffs) in dark mode (thanks to Comfy.n and Kovidgoyal)

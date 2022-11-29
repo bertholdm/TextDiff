@@ -1027,6 +1027,10 @@ class TextDiffDialog(QDialog):
         file_path = dialog.getSaveFileName(self.gui, _('Save File'), file_name, options)
         # print('file_path={0}'.format(file_path))
         # file_path=('H:/Programmierung/Python/calibre_plugins/TextDiff/diff_file_5429_9166.htnl.html', 'HTML file (*.html)')
+        # Handle save file dialog with no user selection
+        if file_apth is None:
+            return error_dialog(self.gui, _('Save to file'), _('No path/file given.'), show=True)
+
         with open(file_path[0], 'w') as f:
             f.write(self.diff)
 
