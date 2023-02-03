@@ -10,11 +10,13 @@ from pathlib import Path
 import difflib  # https://github.com/python/cpython/blob/3.11/Lib/difflib.py
 
 from bs4 import BeautifulSoup
+# import html2text
 
 from PyQt5.QtCore import Qt
 from PyQt5.Qt import (QDialog, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QFont, QGridLayout, QSize,
                       QTextEdit, QComboBox, QCheckBox, QPushButton, QTabWidget, QScrollArea, QMessageBox, QMainWindow,
-                      QApplication, QClipboard, QTextBlock, QTextBrowser, QIntValidator, QFileDialog)  # QDocument,
+                      QApplication, QClipboard, QTextBlock, QTextBrowser, QIntValidator, QFileDialog)
+                    # QDocument, QPlainTextEdit,
 
 from calibre.gui2 import gprefs, error_dialog, info_dialog
 from calibre.ebooks.conversion.config import (get_input_format_for_book, sort_formats_by_preference)
@@ -247,6 +249,8 @@ class TextDiffDialog(QDialog):
         self.text_browser.setAcceptRichText(True)
         self.text_browser.setOpenExternalLinks(False)
 
+        # self.text_edit = QPlainTextEdit()
+
         self.ratio_label = QLabel(_('Ratio is:'))
         self.ratio_label.setObjectName('ratio_label')
         self.ratio = QLineEdit(self)
@@ -303,6 +307,7 @@ class TextDiffDialog(QDialog):
         self.grid_layout.addWidget(self.ratio, 10, 1, 1, 1)
         # row 11
         self.grid_layout.addWidget(self.text_browser, 11, 0, 1, 2)
+        # self.grid_layout.addWidget(self.text_edit, 11, 0, 1, 2)
         # row 12
         self.save_layout = QHBoxLayout()
         self.save_layout.addWidget(self.copy_diff_file_button)
@@ -638,6 +643,12 @@ class TextDiffDialog(QDialog):
                 self.text_browser.setPlainText(
                     _('No differences found in text. However, there may be differences in metadata, formatting or MIME content.'))
             elif diff_options['difftype'] == 'HTML':
+
+                # This ist very slow. But QPlainTextEdit with the appendHtml method is not an option, because the
+                # tables are not preserved. See
+                # https://stackoverflow.com/questions/56373670/how-to-convert-html-into-formatted-text-so-that-the-layout-such-as-spacing-tabl
+                # Perhaps an fork of html2text (https://pypi.org/project/html2text/) ist to consider
+
                 self.text_browser.setReadOnly(True)
                 self.text_browser.setOpenExternalLinks(False)
                 self.text_browser.setUndoRedoEnabled(False)
@@ -646,7 +657,7 @@ class TextDiffDialog(QDialog):
                 self.text_browser.setUpdatesEnabled(True)
             elif diff_options['difftype'] in ['CONTEXT', 'NDIFF', 'UNIFIED']:
                 # context_diff, ndiff and unified_diff returns a gerator, but is already converted to string in make_diff function
-                self.text_browser.setPlainText(self.diff)
+                self.text_browser.setPlainText(self.diff)  # This ist very slow for large html files
             else:
                 self.text_browser.setPlainText(_('Unknown difftype or result:\\n') + self.diff)
 
