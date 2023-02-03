@@ -67,11 +67,11 @@ class TextDiffAction(InterfaceAction):
         # The qaction is automatically created from the action_spec defined above
         self.qaction.setIcon(icon)
         self.qaction.triggered.connect(self.show_dialog)
-        self.qaction.clicked.connect(self.show_dialog)
+        # self.qaction.clicked.connect(self.show_dialog) QAction has no attribute clicked
 
     def load_menu(self):
         self.menu.clear()
-        self.menu.addAction(_('Compyare...'), self.show_dialog)  # compare dialog
+        self.menu.addAction(_('Compare...'), self.show_dialog)  # compare dialog
         self.menu.addAction(_('Settings...'), self.show_configuration)
         self.menu.addAction(_('About...'), self.about)
         self.menu.addAction(_('Help...'), self.help)

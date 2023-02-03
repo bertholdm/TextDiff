@@ -45,15 +45,18 @@ class TextDiffBase(InterfaceActionBase):
     description             = _('A Calibre GUI plugin to find text differences in two book formats.')
     supported_platforms     = ['windows', 'osx', 'linux']
     author                  = 'Michael Detambel, <info@michael-detambel.de>'
-    version                 = (1, 1, 1)
+    version                 = (1, 1, 2)
     # History
+    # Version 1.1.2 - 02-03-2023
+    # - Adding double-quotes for the --sr1-search value, like this: --sr1-search "(?m)^\s*$"
+    #   to avoid "syntax error near unexpected token \`('" on Mac. (Thanks to irinel-dan.)
     # Version 1.1.1 - 11-30-2022
-    # - Handle save file dialog with no user path/file choice
+    # - Handle save file dialog with no user path/file choice.
     # Version 1.1.0 - 11-26-2022
-    # - Changed tool button behavior: show compare dialog when icon clicked, show menu when arrow clicked (thanks to Comfy.n)
-    # - Inverting HTML/CSS back colors (highlighting diffs) in dark mode (thanks to Comfy.n and Kovidgoyal)
+    # - Changed tool button behavior: show compare dialog when icon clicked, show menu when arrow clicked (thanks to Comfy.n).
+    # - Inverting HTML/CSS back colors (highlighting diffs) in dark mode (thanks to Comfy.n and Kovidgoyal).
     # Version 1.0.0 - 11-17-2022
-    # - Initial release
+    # - Initial release.
     minimum_calibre_version = (5, 0, 0)
     can_be_disabled         = True
 

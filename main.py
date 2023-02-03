@@ -569,7 +569,8 @@ class TextDiffDialog(QDialog):
         text_formats = []
         # convert_options = ' -v -v –enable-heuristics '
         convert_options = ' -v -v '
-        convert_options = convert_options + ' --sr1-search (?m)^\s*$ --sr1-replace ""'
+        convert_options = convert_options + ' --sr1-search "(?m)^\s*$" --sr1-replace ""'  # For Mac
+        # convert_options = convert_options + ' --sr1-search (?m)^\s*$ --sr1-replace ""'
         # if re.match(r'^\s*$', line):
         #     # line is empty (has only the following: \t\n\r and whitespace)
         # --sr1-replace

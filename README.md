@@ -1,4 +1,4 @@
-[GUI Plugin] TextDiff - Version 1.1.0 - 11-26-2022
+[GUI Plugin] TextDiff - Version 1.1.2 - 02-03-2023
 
 A Calibre GUI plugin for finding text differences in two book formats.
 
@@ -36,6 +36,11 @@ Limitations:
 
 Version History:
 ----------------
+Version 1.1.2 - 02-03-2023
+- Adding double-quotes for the --sr1-search value: --sr1-search "(?m)^\s*$"
+  to avoid "syntax error near unexpected token \`('" on Mac. (Thanks to irinel-dan.)
+Version 1.1.1 - 11-30-2022
+- Handle save file dialog with no user path/file choice.
 Version 1.1.0 - 11-26-2022
 - Changed tool button behavior: show compare dialog when icon clicked, show menu when arrow clicked (thanks to Comfy.n)
 - Inverting HTML/CSS back colors (highlighting diffs) in dark mode (thanks to Comfy.n and Kovidgoyal)
@@ -45,6 +50,7 @@ Version 1.0.0 11-20-2022
 Installation:
 -------------
 Download the attached zip file and install the plugin as described in the plugins thread on mobileread.
+You need to add the calibre path to your $PATH variable.
 
 To report Bugs and suggestions:
 -------------------------------
@@ -52,7 +58,7 @@ If you find any issues or have suggestions, please report them in this thread.
 
 ---
 
-[GUI-Plugin] TextDiff - Version 1.1.0 - 26.11.2022
+[GUI-Plugin] TextDiff - Version 1.1.2 - 02-03-2023
 
 Ein Calibre GUI-Plugin zum Finden von Textunterschieden in zwei Buchformaten.
 
@@ -88,6 +94,11 @@ Einschränkungen:
 
 Versionsgeschichte:
 -------------------
+Version 1.1.2 - 02-03-2023
+- Doppelte Anführungszeichen hinzugefügt für den Wert des parameter --sr1-search value: --sr1-search "(?m)^\s*$"
+  zur Vermeidung der Meldung "syntax error near unexpected token \`('" auf dem Mac. (Danke an irinel-dan.)
+Version 1.1.1 - 11-30-2022
+- Abfangen im "Datei speichern"-Dialog, dass kein Format ausgewählt.
 Version 1.1.0 - 26.11.2022
 - Geändertes Verhalten der Werkzeugschaltfläche: Vergleichsdialog anzeigen, wenn auf das Symbol geklickt wird, Menü anzeigen, wenn auf den Pfeil geklickt wird (Dank an Comfy.n)
 - Invertieren von HTML/CSS-Hintergrundfarben (Hervorheben von Unterschieden) im Dunkelmodus (Dank an Comfy.n und Kovidgoyal)
@@ -97,6 +108,7 @@ Erstveröffentlichung.
 Installation:
 -------------
 Laden Sie die angehängte ZIP-Datei herunter und installieren Sie das Plugin wie im Thread "Einführung in Plugins" auf mobileread beschrieben.
+Vergessen Sie nicht, Cablibre in Ihre PATH-Variable aufzunehmen.
 
 So melden Sie Fehler und Vorschläge:
 ------------------------------------
