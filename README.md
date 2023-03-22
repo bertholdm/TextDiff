@@ -70,7 +70,7 @@ Die Formate wurden zunächst in Textformat konvertiert (auch wenn das Ausgangsfo
 Wenn die Konvertierung fehlschlägt, kann das daran liegen, dass das Format keinen text enthält (wie z. B. bei gescannten PDF-Dateien) oder Calibre ein Konvertierungstool nicht finden kann (wie z. B. Microsoft wordconv).
 Dann werden die Textdateien in den Speicher eingelesen und eventuell manipuliert (Leerzeilen und Ähnliches entfernen, wie unter "Geplante Features" beschrieben).
 mit dem Konvertierungsprogramm von Calibre (https://manual.calibre-ebook.com/generated/en/ebook-convert.html).
-Dann wird der Vergleich mit Pythons DiffLib (https://docs.python.org/3/library/difflib.html) durchgef�hrt.
+Dann wird der Vergleich mit Pythons DiffLib (https://docs.python.org/3/library/difflib.html) durchgeführt.
 Das Verhältnis gibt ein Maß für die Ähnlichkeit der beiden Texte an. 1,0 bedeutet, dass die Texte identisch sind, ein Wert nahe 0,0 bedeutet, dass die Texte völlig unterschiedlich sind.
 Letzteres kann auch passieren, wenn das Quellformat keinen Textinhalt hat (wie gescannte PDF-Dateien). Dann sollte man ein neues Buch-Format (Text) mit einem OCR-Prozess erzeugen.
 
@@ -79,11 +79,11 @@ Der detaillierte Arbeitsablauf ist wie folgt:
 2. Wählen Sie zwei Formate aus.
 3. Wählen Sie das Ausgabeformat und andere Vergleichsoptionen.
 4. Klicken Sie auf "Vergleichen".
-5. Die Formate werden konvertiert und verglichen und die Ausgabe wird im Ausgabefenster angezeigt. Ein Verh�ltnis wird ebenfalls berechnet und angezeigt.
+5. Die Formate werden konvertiert und verglichen und die Ausgabe wird im Ausgabefenster angezeigt. Ein Verhältnis wird ebenfalls berechnet und angezeigt.
 6. Falls gewünscht, kopieren Sie die Vergleichsausgabe in die Zwischenablage und/oder speichern Sie sie in einer Datei und/oder speichern Sie sie als Buch in einem geeigneten Format (HTML oder Text).
 
-Wenn Sie andere Formate vergleichen möchten, wiederholen Sie Schritt 1 und klicken Sie auf die Schaltfl�che "Formate aktualisieren".
-Der "Vergleichen"-Dialog ist moduslos, was es erlaubt, ihn zu bewegen und den Calibre-Bildschirm zu ber�hren.
+Wenn Sie andere Formate vergleichen möchten, wiederholen Sie Schritt 1 und klicken Sie auf die Schaltfläche "Formate aktualisieren".
+Der "Vergleichen"-Dialog ist moduslos, was es erlaubt, ihn zu verschieben, und den darunterliegenden Calibre-Bildschirm zu steuern.
 
 Geplante Funktionen:
 --------------------
