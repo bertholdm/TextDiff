@@ -966,7 +966,7 @@ class TextDiffDialog(QDialog):
                 # - Replace marker in text blob 1 with text blob 2
 
                 self.gui.status_bar.showMessage(_('Stripping identical lines...'))
-                print('Stripping identical lines. Preserving max. {0} context lines.'.format(max_lines))
+                print('Stripping identical lines. Preserving max. {0} context line(s).'.format(max_lines))
 
                 table_soup = BeautifulSoup(diff, 'html.parser')
                 table_body = table_soup.find('tbody')
@@ -1009,15 +1009,15 @@ class TextDiffDialog(QDialog):
                     print('{0} identical line(s) suppressed.'.format(len(context_table) - max_lines))
                 if len(context_table) > 0:
                     diff_table.extend(context_table[-max_lines:])  # put last n context lines to output
-                    print('Put context lines to diff_table: ///{0}///: '.format(context_table[-max_lines:]))
+                    print('Extend diff_table with context lines: {0}'.format(context_table[-max_lines:]))
                 # print(_('List diff_table has now {0} entries.'.format(len(diff_table))))
                 # print(_('List diff_table[:100]={0}'.format(diff_table[:100])))
                 # Replace the marker with the conten of the diff_table
-                tbody = BeautifulSoup('<tbody>' + ' '.join(diff_table) + '</tbody>', 'xml')
+                tbody = BeautifulSoup('<tbody>' + ' '.join(diff_table).strip() + '</tbody>', 'xml')
                 table_soup.find(text='***put tbody here***').replace_with(tbody)
                 diff = str(table_soup)
                 # print('Manipulating Diff finished, diff[:1000] + diff[-200:]=' + diff[:1000] + '*****' + diff[-200:])
-                self.gui.status_bar.showMessage(_('Manipulating Diff finished.'))
+                self.gui.status_bar.showMessage(_('Manipulating diff result finished.'))
 
             # Reformat the table (modernize html) before put into TextBrowser windowindow
 
@@ -1032,7 +1032,7 @@ class TextDiffDialog(QDialog):
             # </thead>
             # Avoid colspan to set col style
             diff = re.sub('<th colspan="2"', '<th class="diff_header">&nbsp;</th><th', diff)
-            # Wrap modernized html around the diff table
+            # Wrap modernized html around the diff
             diff = before_table_template + diff + self.after_table_template
 
         elif diff_options['difftype'] == 'CONTEXT':
