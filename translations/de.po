@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Perrypedia\n"
-"POT-Creation-Date: 2023-03-22 17:03+0100\n"
-"PO-Revision-Date: 2023-03-22 17:03+0100\n"
+"POT-Creation-Date: 2023-03-22 22:55+0100\n"
+"PO-Revision-Date: 2023-03-22 22:56+0100\n"
 "Last-Translator: Michael Detambel <info@michael-detambel.de>\n"
 "Language-Team: Michael Detambel, <info@michael-detambel.de>\n"
 "Language: de_DE\n"
@@ -275,72 +275,72 @@ msgstr "Diff beendet. Erstelle die endgültige HTML-Ausgabe."
 msgid "Stripping identical lines..."
 msgstr "Unterdrücke übereinstimmende Zeilen..."
 
-#: main.py:984 main.py:986 main.py:1001 main.py:1003
+#: main.py:984 main.py:987 main.py:1003 main.py:1006
 #, python-brace-format
 msgid "[{0} identical line(s).]"
 msgstr "[{0} identische Zeile(n).]"
 
-#: main.py:1016
-msgid "Manipulating Diff finished."
-msgstr "Bearbeitung von Diff beendet."
+#: main.py:1020
+msgid "Manipulating diff result finished."
+msgstr "Bearbeitung des Diff-Ergebnisses beendet."
 
-#: main.py:1058
+#: main.py:1062
 msgid "Unknown compare option!"
 msgstr "Nicht erwartete Vergleichsoption!"
 
-#: main.py:1098
+#: main.py:1102
 msgid "Enter save_diff_file()..."
 msgstr "Beginne save_diff_file()..."
 
-#: main.py:1107 main.py:1108
+#: main.py:1111 main.py:1112
 msgid "HTML file (*.html)"
 msgstr "HTML-Datei (*.html)"
 
-#: main.py:1111 main.py:1112
+#: main.py:1115 main.py:1116
 msgid "Text (*.txt)"
 msgstr "Text (*.txt)"
 
-#: main.py:1118
+#: main.py:1122
 msgid "Save File"
 msgstr "Datei speichern"
 
-#: main.py:1127
+#: main.py:1131
 msgid "Save to file"
 msgstr "Ergebnis als Datei speichern"
 
-#: main.py:1127
+#: main.py:1131
 msgid "No path/file given."
 msgstr "Kein Ausgabepfad angegeben."
 
-#: main.py:1131
+#: main.py:1135
 msgid "Enter add_book()..."
 msgstr "Beginne add_book()..."
 
-#: main.py:1132
+#: main.py:1136
 msgid "Adding book..."
 msgstr "Füge ein Buch mit der Differenz-Datei hinzu..."
 
-#: main.py:1161
+#: main.py:1165
 msgid "Create book..."
 msgstr "Erstelle Buch..."
 
-#: main.py:1165
+#: main.py:1169
 msgid "Setting cover..."
 msgstr "Erstelle ein Titelbild..."
 
-#: main.py:1173
+#: main.py:1177
 msgid "Adding format..."
 msgstr "Füge ein Format hinzu..."
 
-#: main.py:1188
+#: main.py:1192
 msgid "Book saved."
 msgstr "Buch gespeichert."
 
-#: main.py:1189
+#: main.py:1193
 msgid "Save diff to book."
 msgstr "Speichere Vergleichsergebnis als Buch."
 
-#: main.py:1189
+#: main.py:1193
 msgid "Book with diff content as format added"
 msgstr "Buch mit dem Ergebnis des Vergleichs als Format hinzugefügt."
 
