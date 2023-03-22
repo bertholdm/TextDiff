@@ -981,28 +981,32 @@ class TextDiffDialog(QDialog):
                     if '<span class="diff_' in str(row):  # This is a row with differences
                         if len(context_table) > max_lines:
                             diff_table.append('<tr><td class="diff_next">&nbsp;</td><td class="diff_header">&nbsp;</td>'
-                                              '<td><i>' + _('[{0} identical line(s).]') + '</i></td>'
+                                              '<td><i>' + _('[{0} identical line(s).]'
+                                                            .format(len(context_table) - max_lines)) + '</i></td>'
                                               '<td class="diff_next">&nbsp;</td><td class="diff_header">&nbsp;</td>'
-                                              '<td><i>' + _('[{0} identical line(s).]') + '</i></td>'
-                                              .format(len(context_table) - max_lines))
-                            print('<tr><i>[{0} identical line(s) ignored.]</i></tr>'.format(len(context_table) - max_lines))
+                                              '<td><i>' + _('[{0} identical line(s).]'
+                                                            .format(len(context_table) - max_lines)) + '</i></td></tr>'
+                                              )
+                            print('{0} identical line(s) suppressed.'.format(len(context_table) - max_lines))
                         if len(context_table) > 0:
                             diff_table.extend(context_table[-max_lines:])  # put last n context lines to output
-                            # print('Put context lines to diff_table: ///{0}///: '.format(context_table[-max_lines:]))
-                        context_table = []
+                            # print('Put context lines to diff_table: {0}: '.format(context_table[-max_lines:]))
+                            context_table = []  # Context lines are written, so empty the context list
                         diff_table.append(str(row))  # Put the diff row to output
-                        # print('Append row to diff_table: {0}'.format(str(row)))
+                        print('Append not identical row to diff_table: {0}'.format(str(row)))
                     else:
                         context_table.append(str(row))
-                        # identical_lines = identical_lines + 1
+                        print('Append row to context_table: {0}'.format(context_table))
                 # All rows are processed. Are still ignored lines after the last diff?
                 if len(context_table) > max_lines:
                     diff_table.append('<tr><td class="diff_next">&nbsp;</td><td class="diff_header">&nbsp;</td>'
-                                      '<td><i>' + _('[{0} identical line(s).]') + '</i></td>'
+                                      '<td><i>' + _('[{0} identical line(s).]'
+                                                    .format(len(context_table) - max_lines)) + '</i></td>'
                                       '<td class="diff_next">&nbsp;</td><td class="diff_header">&nbsp;</td>'
-                                      '<td><i>' + _('[{0} identical line(s).]') + '</i></td>'
-                                      .format(len(context_table) - max_lines))
-                    print('<tr><i>[{0} identical line(s) ignored.]</i></tr>'.format(len(context_table) - max_lines))
+                                      '<td><i>' + _('[{0} identical line(s).]'
+                                                    .format(len(context_table) - max_lines)) + '</i></td></tr>'
+                                      )
+                    print('{0} identical line(s) suppressed.'.format(len(context_table) - max_lines))
                 if len(context_table) > 0:
                     diff_table.extend(context_table[-max_lines:])  # put last n context lines to output
                     print('Put context lines to diff_table: ///{0}///: '.format(context_table[-max_lines:]))
