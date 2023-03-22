@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Perrypedia\n"
-"POT-Creation-Date: 2022-11-26 10:54+0100\n"
-"PO-Revision-Date: 2022-11-26 10:59+0100\n"
+"POT-Creation-Date: 2023-03-22 16:13+0100\n"
+"PO-Revision-Date: 2023-03-22 16:14+0100\n"
 "Last-Translator: Michael Detambel <info@michael-detambel.de>\n"
 "Language-Team: Michael Detambel, <info@michael-detambel.de>\n"
 "Language: de_DE\n"
@@ -10,11 +10,11 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 3.2\n"
+"X-Generator: Poedit 3.2.2\n"
 "X-Poedit-Basepath: ..\n"
 "X-Poedit-SearchPath-0: .\n"
 
-#: __init__.py:45
+#: __init__.py:44
 msgid "A Calibre GUI plugin to find text differences in two book formats."
 msgstr "Ein UI Plugin zum Finden von Unterschieden zwischen zwei Texten."
 
@@ -28,31 +28,31 @@ msgstr ""
 "Diese Einstellungen legen die grundlegenden Eigenschaften des Plugins fest. "
 "Z. Z. nicht verwendet!"
 
-#: main.py:149
+#: main.py:153
 msgid "1st file (left):"
 msgstr "Erstes Format (links)"
 
-#: main.py:151
+#: main.py:155
 msgid "2nd file (right):"
 msgstr "Zweites Format (rechts)"
 
-#: main.py:172
+#: main.py:176
 msgid "Refresh book formats list"
 msgstr "Formatliste aktualisieren"
 
-#: main.py:177
+#: main.py:181
 msgid "Display format:"
 msgstr "Ausgabeformat:"
 
-#: main.py:186
+#: main.py:190
 msgid "Font family for output:"
 msgstr "Schriftfamilie für die Ausgabe:"
 
-#: main.py:195
-msgid "Reduce number of lines around different lines"
-msgstr "Verringere die Anzahl Zeilen um Zeilen mit Unterschieden."
+#: main.py:199
+msgid "Suppress identical lines, but preserve n context lines."
+msgstr "Unterdrücke identische Zeilen bis auf n Kontext-Zeilen"
 
-#: main.py:200
+#: main.py:205
 msgid ""
 "Set context to True when contextual differences are to be shown, else the "
 "default is False to show the full files."
@@ -60,11 +60,11 @@ msgstr ""
 "Anhaken, wenn Unterschiede im Kontext angezeigt werden sollen, ansonsten "
 "wird der komplette Text angezeigt."
 
-#: main.py:206
+#: main.py:211
 msgid "Number of context lines:"
 msgstr "Anzahl der Kontext-Zeilen:"
 
-#: main.py:217
+#: main.py:223
 msgid ""
 "When context is True numlines controls the number of context lines which "
 "surround the difference highlights. When context is False numlines controls "
@@ -79,83 +79,83 @@ msgstr ""
 "Unterschieden angezeigt werden, wenn die „Nächster“-Hyperlinks verwendet "
 "werden."
 
-#: main.py:223
+#: main.py:229
 msgid "Tabsize (HtmlDiff):"
 msgstr "Tabulatorweite (nur für HtmlDiff):"
 
-#: main.py:231
+#: main.py:237
 msgid "Specify tab stop spacing."
 msgstr "Weite eines Tab-Stopps angeben."
 
-#: main.py:233
+#: main.py:239
 msgid "Wrap columns at (HtmlDiff):"
 msgstr "Umbruch bei Spalte (bei HtmlDiff):"
 
-#: main.py:241
+#: main.py:247
 msgid ""
 "Specify column number where lines are broken and wrapped. 0 for not to break."
 msgstr ""
 "Die Spalte angeben, ab der Zeilen umgebrochen werden sollen. Null (0) für "
 "keinen Umbruch."
 
-#: main.py:243
+#: main.py:249
 msgid "Compare"
 msgstr "Vergleiche"
 
-#: main.py:250
+#: main.py:258
 msgid "Ratio is:"
 msgstr "Das Übereinstimmungsverhältnis ist:"
 
-#: main.py:254
+#: main.py:262
 msgid "A measure of the sequences’ similarity as a float in the range [0, 1]."
 msgstr ""
 "Ein Maß für die Ähnlichkeit der beiden Texte (als Fließkommazahl zwischen 0 "
 "und 1)."
 
-#: main.py:256
+#: main.py:264
 msgid "Copy output to clipboard."
-msgstr "Kopiere das Ergebnis in die Zwischenablage"
+msgstr "Ergebnis in die Zwischenablage kopieren"
 
-#: main.py:258
+#: main.py:266
 msgid "Save output to file"
 msgstr "Ergebnis als Datei speichern"
 
-#: main.py:260
+#: main.py:268
 msgid "Save output as book"
 msgstr "Ergebnis als Buch ablegen"
 
-#: main.py:323
+#: main.py:332
 msgid "TextDiff Plugin"
 msgstr "TextDiff-Plugin"
 
-#: main.py:416 main.py:429 main.py:447
+#: main.py:420 main.py:433 main.py:451
 msgid "TextDiff error"
 msgstr "TextDiff Fehler"
 
-#: main.py:417
+#: main.py:421
 msgid "One or two books (with at least total two formats) must be marked."
 msgstr ""
 "Ein oder zwei Bücher mit zusammen mindestens zwei Dateiformaten müssen "
 "markiert sein."
 
-#: main.py:428
+#: main.py:432
 #, python-brace-format
 msgid "Book {0} has no formats!"
 msgstr "Buch {0} hat keine Formate!"
 
-#: main.py:446
+#: main.py:450
 msgid "Book has no formats!"
 msgstr "Das Buch hat kein Format!"
 
-#: main.py:494
+#: main.py:495
 msgid "Starting compare..."
 msgstr "Beginne Vergleich..."
 
-#: main.py:503
+#: main.py:504
 msgid "No books selected"
 msgstr "Kein Buch ausgewählt"
 
-#: main.py:504 main.py:508
+#: main.py:505 main.py:509
 msgid ""
 "You must select one book with more than one format or two books to perform "
 "this action."
@@ -163,25 +163,39 @@ msgstr ""
 "Sie müssen entweder ein Buch mit mindestens zwei Formaten oder genau zwei "
 "Bücher mit zusammen mindestens zwei Formaten auswählen."
 
-#: main.py:507
+#: main.py:508
 msgid "Too much books selected"
 msgstr "Zu viele Bücher ausgewählt (max. 2)"
 
-#: main.py:553
+#: main.py:554
 msgid "Not enough formats to compare"
 msgstr "Mindestens zwei Dateien für den Vergleich notwendig"
 
-#: main.py:554
+#: main.py:555
 msgid "The selected book(s) must have at least two formats to compare."
 msgstr ""
 "Das gewählte Buch oder die gewählten Bücher müssen zusammen mindestens zwei "
 "Dateiformate haben."
 
-#: main.py:590
+#: main.py:584
+msgid "Starting convert..."
+msgstr "Beginne Konvertierung zu Text..."
+
+#: main.py:596
+msgid "Convert finished."
+msgstr "Konvertierung beendet."
+
+#: main.py:598
+msgid "No compare possible, since at least one convert failed."
+msgstr ""
+"Kein Vergleich möglich, da mindestens ein Konvertierungsvorgang "
+"fehlgeschlagen ist."
+
+#: main.py:602
 msgid "Format conversion finished. Beginning compare..."
 msgstr "Formatumwandlung beendet. Beginne Vergleich..."
 
-#: main.py:619 main.py:638
+#: main.py:633 main.py:653
 msgid ""
 "No differences found in text. However, there may be differences in metadata, "
 "formatting or MIME content."
@@ -190,122 +204,138 @@ msgstr ""
 "beiden Dateien in den Metadaten, der Formatierung oder Multimedia-Inhalten "
 "unterscheiden. "
 
-#: main.py:622
+#: main.py:636 main.py:637
 msgid "Putting result in text browser window..."
 msgstr "Schaufele das Ergebnis in das Text-Browser-Fenster..."
 
-#: main.py:635
+#: main.py:650
 msgid "No diff result! Please report this."
 msgstr "Kein Vergleichsergebnis! Bitte als Fehler melden."
 
-#: main.py:650
+#: main.py:671
 msgid "Unknown difftype or result:\\n"
 msgstr "Unbekannte Vergleichsoption oder nicht erwartetes Ergebnis:\\n"
 
-#: main.py:676
+#: main.py:674
+msgid "Compare finished."
+msgstr "Vergleich beendet."
+
+#: main.py:704
 msgid "Enter ebook_convert()..."
 msgstr "Beginne ebook_convert()..."
 
-#: main.py:689
+#: main.py:717
 msgid "Starting ebook_convert()..."
 msgstr "Starte ebook_convert()..."
 
-#: main.py:690
+#: main.py:718
 msgid "Starting ebook-convert..."
 msgstr "Beginne Konvertierung zu Text..."
 
-#: main.py:718
+#: main.py:750
 msgid "TextDiff plugin"
 msgstr "TextDiff Plugin"
 
-#: main.py:719
+#: main.py:751
 #, python-brace-format
 msgid "The file {0} don't exist. Probably conversion to text format failed."
 msgstr ""
 "Textformat für die Datei {0} wurde nicht gefunden. Wahrscheinlich ist die "
 "Konversion fehlgeschlagen."
 
-#: main.py:725
+#: main.py:759 main.py:760
 msgid "Deleting temp file..."
 msgstr "Lösche temporäre Datei..."
 
-#: main.py:729
+#: main.py:764 main.py:765
 msgid "Finishing ebook_convert()."
 msgstr "Beende ebook_convert()."
 
-#: main.py:737
+#: main.py:772
 msgid "Enter create_diff()..."
 msgstr "Beginne create_diff()..."
 
-#: main.py:756 main.py:924
+#: main.py:791
 msgid "No differences found!"
 msgstr "Keine Unterschiede im Text gefunden!"
 
-#: main.py:780
+#: main.py:815
 msgid "Instantiate HtmlDiff..."
 msgstr "Instanziiere HtmlDiff..."
 
-#: main.py:851
+#: main.py:886
 msgid "Calling HtmlDiff.make_table()..."
 msgstr "Starte HtmlDiff.make_table()..."
 
-#: main.py:869
-msgid "Diff finished."
-msgstr "Vergleich beendet."
+#: main.py:905 main.py:906
+msgid "Diff finished. Building final HTML output..."
+msgstr "Diff beendet. Erstelle die endgültige HTML-Ausgabe."
 
-#: main.py:922
-msgid "diff list is empty - no differences found!"
-msgstr "Die Vergleichsliste ist leer - Keine Unterschiede gefunden!"
+#: main.py:965
+msgid "Stripping identical lines..."
+msgstr "Unterdrücke übereinstimmende Zeilen..."
 
-#: main.py:964
+#: main.py:1010
+msgid "Manipulating Diff finished."
+msgstr "Bearbeitung von Diff beendet."
+
+#: main.py:1051
 msgid "Unknown compare option!"
 msgstr "Nicht erwartete Vergleichsoption!"
 
-#: main.py:1007
+#: main.py:1091
 msgid "Enter save_diff_file()..."
 msgstr "Beginne save_diff_file()..."
 
-#: main.py:1016 main.py:1017
+#: main.py:1100 main.py:1101
 msgid "HTML file (*.html)"
 msgstr "HTML-Datei (*.html)"
 
-#: main.py:1020 main.py:1021
+#: main.py:1104 main.py:1105
 msgid "Text (*.txt)"
 msgstr "Text (*.txt)"
 
-#: main.py:1027
+#: main.py:1111
 msgid "Save File"
 msgstr "Datei speichern"
 
-#: main.py:1036
+#: main.py:1120
+msgid "Save to file"
+msgstr "Ergebnis als Datei speichern"
+
+#: main.py:1120
+msgid "No path/file given."
+msgstr "Kein Ausgabepfad angegeben."
+
+#: main.py:1124
 msgid "Enter add_book()..."
 msgstr "Beginne add_book()..."
 
-#: main.py:1037
+#: main.py:1125
 msgid "Adding book..."
 msgstr "Füge ein Buch mit der Differenz-Datei hinzu..."
 
-#: main.py:1066
+#: main.py:1154
 msgid "Create book..."
 msgstr "Erstelle Buch..."
 
-#: main.py:1070
+#: main.py:1158
 msgid "Setting cover..."
 msgstr "Erstelle ein Titelbild..."
 
-#: main.py:1078
+#: main.py:1166
 msgid "Adding format..."
 msgstr "Füge ein Format hinzu..."
 
-#: main.py:1093
+#: main.py:1181
 msgid "Book saved."
 msgstr "Buch gespeichert."
 
-#: main.py:1094
+#: main.py:1182
 msgid "Save diff to book."
 msgstr "Speichere Vergleichsergebnis als Buch."
 
-#: main.py:1094
+#: main.py:1182
 msgid "Book with diff content as format added"
 msgstr "Buch mit dem Ergebnis des Vergleichs als Format hinzugefügt."
 
@@ -317,21 +347,27 @@ msgstr "TextDiff"
 msgid "Run the TextDiff Plugin."
 msgstr "TextDiff-Plugin starten."
 
-#: ui.py:74
-msgid "Compyare..."
+#: ui.py:75
+msgid "Compare..."
 msgstr "Vergleiche..."
 
-#: ui.py:75
+#: ui.py:76
 msgid "Settings..."
 msgstr "Einstellungen..."
 
-#: ui.py:76
+#: ui.py:77
 msgid "About..."
 msgstr "Über"
 
-#: ui.py:77
+#: ui.py:78
 msgid "Help..."
 msgstr "Hilfe..."
+
+#~ msgid "Reduce number of lines around different lines"
+#~ msgstr "Unterdrücke identische Zeilen (um Zeilen mit Unterschieden."
+
+#~ msgid "diff list is empty - no differences found!"
+#~ msgstr "Die Vergleichsliste ist leer - Keine Unterschiede gefunden!"
 
 #~ msgid "Calibre is in dark mode"
 #~ msgstr "Calibre-Oberfläche ist im dunklen Modus"

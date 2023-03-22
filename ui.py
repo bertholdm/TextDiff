@@ -5,7 +5,7 @@
 import gettext
 
 from PyQt5.Qt import (QMenu, QDialog, QWidget, QTabWidget, QVBoxLayout, QHBoxLayout, QLabel, QGridLayout, QMessageBox,
-                       QTextEdit, QLineEdit, QFont, QComboBox, QCheckBox, QPushButton, QToolButton, QScrollArea)
+                      QTextEdit, QLineEdit, QFont, QComboBox, QCheckBox, QPushButton, QToolButton, QScrollArea)
 
 from calibre.gui2.actions import InterfaceAction
 from calibre_plugins.textdiff.main import TextDiffDialog
@@ -16,8 +16,8 @@ DEFAULT_ICON = 'images/icon.png'
 _ = gettext.gettext
 load_translations()
 
-class TextDiffAction(InterfaceAction):
 
+class TextDiffAction(InterfaceAction):
     name = 'TextDiff'
 
     # Declare the main action associated with this plugin
@@ -29,6 +29,7 @@ class TextDiffAction(InterfaceAction):
     action_spec = (_('TextDiff'), None, _('Run the TextDiff Plugin.'), 'Ctrl+Shift+F12')
     popup_type = QToolButton.MenuButtonPopup  # start action when icon clicked, show menu when arrow clicked
     action_type = 'current'
+
     # action_type = 'global'
 
     # # disable when not in library. (main,carda,cardb)
