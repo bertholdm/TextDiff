@@ -990,13 +990,13 @@ class TextDiffDialog(QDialog):
                             print('{0} identical line(s) suppressed.'.format(len(context_table) - max_lines))
                         if len(context_table) > 0:
                             diff_table.extend(context_table[-max_lines:])  # put last n context lines to output
-                            # print('Put context lines to diff_table: {0}: '.format(context_table[-max_lines:]))
+                            print('Extend diff_table with context lines: {0}'.format(context_table[-max_lines:]))
                             context_table = []  # Context lines are written, so empty the context list
                         diff_table.append(str(row))  # Put the diff row to output
                         print('Append not identical row to diff_table: {0}'.format(str(row)))
                     else:
                         context_table.append(str(row))
-                        print('Append row to context_table: {0}'.format(context_table))
+                        print('Append identical row to context_table: {0}'.format(context_table))
                 # All rows are processed. Are still ignored lines after the last diff?
                 if len(context_table) > max_lines:
                     diff_table.append('<tr><td class="diff_next">&nbsp;</td><td class="diff_header">&nbsp;</td>'
