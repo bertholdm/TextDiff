@@ -981,9 +981,9 @@ class TextDiffDialog(QDialog):
                     if '<span class="diff_' in str(row):  # This is a row with differences
                         if len(context_table) > max_lines:
                             diff_table.append('<tr><td class="diff_next">&nbsp;</td><td class="diff_header">&nbsp;</td>'
-                                              '<td><i>[{0} identical line(s).]</i></td>'
+                                              '<td><i>' + _('[{0} identical line(s).]') + '</i></td>'
                                               '<td class="diff_next">&nbsp;</td><td class="diff_header">&nbsp;</td>'
-                                              '<td><i>[{0} identical line(s).]</i></td></tr>'
+                                              '<td><i>' + _('[{0} identical line(s).]') + '</i></td>'
                                               .format(len(context_table) - max_lines))
                             print('<tr><i>[{0} identical line(s) ignored.]</i></tr>'.format(len(context_table) - max_lines))
                         if len(context_table) > 0:
@@ -997,8 +997,10 @@ class TextDiffDialog(QDialog):
                         # identical_lines = identical_lines + 1
                 # All rows are processed. Are still ignored lines after the last diff?
                 if len(context_table) > max_lines:
-                    diff_table.append('<tr><td>&nbsp;</td><td>&nbsp;</td><td><i>[{0} identical line(s).]</i></td>'
-                                      '<td>&nbsp;</td><td>&nbsp;</td><td><i>[{0} identical line(s).]</i></td></tr>'
+                    diff_table.append('<tr><td class="diff_next">&nbsp;</td><td class="diff_header">&nbsp;</td>'
+                                      '<td><i>' + _('[{0} identical line(s).]') + '</i></td>'
+                                      '<td class="diff_next">&nbsp;</td><td class="diff_header">&nbsp;</td>'
+                                      '<td><i>' + _('[{0} identical line(s).]') + '</i></td>'
                                       .format(len(context_table) - max_lines))
                     print('<tr><i>[{0} identical line(s) ignored.]</i></tr>'.format(len(context_table) - max_lines))
                 if len(context_table) > 0:
