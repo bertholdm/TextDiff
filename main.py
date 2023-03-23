@@ -196,7 +196,10 @@ class TextDiffDialog(QDialog):
 
         # The table can be generated in either full or contextual difference mode
         # Only for HtmlDiff! context=True, numlines=10
-        self.context = QCheckBox(_('Suppress identical lines, but preserve n context lines.'))
+        self.context_mode = QCheckBox(_('Context handling by plugin'))
+        self.context_mode.setToolTip(_('Check, if context handling is is to be performed by plugin, not by Difflib.'))
+        self.context_mode.setChecked(True)
+        self.context = QCheckBox(_('Suppress identical lines, preserve n context lines'))
         # Set context to True when contextual differences are to be shown,
         # else the default is False to show the full files.
         self.context.setEnabled(True)  # HtmlDiff ist selected by default, so enable context flag
@@ -217,7 +220,7 @@ class TextDiffDialog(QDialog):
         self.numlines.setMaxLength(2)
         self.numlines.setText(
             '5')  # HtmlDiff ist selected by default, so enable context flag and numlines and set default to 5
-        if self.context.isChecked():
+        if self.context_mode.isChecked():
             self.numlines.setText('1')
         # if initial_value != None:
         #     self.lnumines.setText(str(initial_value))
@@ -296,6 +299,7 @@ class TextDiffDialog(QDialog):
         # row 5:
         # row 6
         self.option_box2 = QHBoxLayout()
+        self.option_box2.addWidget(self.context_mode)  # Only for HtmlDiff
         self.option_box2.addWidget(self.context)  # Only for HtmlDiff
         self.option_box2.addWidget(self.numlines_label)
         self.option_box2.addWidget(self.numlines)
@@ -378,6 +382,7 @@ class TextDiffDialog(QDialog):
             font = QFont()
             font.setFamily('monospace')
             self.text_browser.setFont(font)
+            self.context_mode.setChecked(False)
             self.context.setChecked(False)
             self.context.setEnabled(False)
         else:
@@ -385,7 +390,10 @@ class TextDiffDialog(QDialog):
             font.setFamily(self.fontfamily_combo.CurrentText())
             self.text_browser.setFont(font)
             self.context.setEnabled(True)
-            self.numlines.setText('5')
+            if self.context_mode.isChecked():
+                self.numlines.setText('1')
+            else:
+                self.numlines.setText('5')
 
     def sizeHint(self):
         # notwendig? (stammt aus single.py)
@@ -906,7 +914,7 @@ class TextDiffDialog(QDialog):
 
             # Compares fromlines and tolines (lists of strings) and returns a string which is a complete HTML table
             # showing line by line differences with inter-line and intra-line changes highlighted.
-            if self.context.isChecked():
+            if self.context_mode.isChecked():
                 # Context lines are processed by plugin itself
                 diff = d.make_table(text_lines[0], text_lines[1], book_attributes[0], book_attributes[1],
                                     context=False, numlines=5) \
