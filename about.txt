@@ -2,12 +2,10 @@ TextDiff
 
 A Calibre GUI plugin for finding text differences in two book formats.
 
-Created by Michael Detambel (info@michael-detambel.de).
-
 It depenmds on Calibre's convert utility (https://manual.calibre-ebook.com/generated/en/ebook-convert.html) and Python's DiffLib (https://docs.python.org/3/library/difflib.html).
 
 The source code is at https://github.com/bertholdm/TextDiff.
 
-Version 1.0.0 - 11-20-2022
+Version 1.2.0 - 03-22-2023
 
 

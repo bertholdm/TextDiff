@@ -44,13 +44,14 @@ class TextDiffBase(InterfaceActionBase):
     description = _('A Calibre GUI plugin to find text differences in two book formats.')
     supported_platforms = ['windows', 'osx', 'linux']
     author = 'Michael Detambel, <info@michael-detambel.de>'
-    version = (1, 2, 0)
+    version = (1, 2, 1)
 
     # ToDo: Check PDF first on decryption and image only
-    # ToDo: Reduce equal lines to only a few 
     # ToDo: Check/convert multiple cols to sequential text
 
     # History
+    # Version 1.2.1 - 03-23-2023
+    # - Switch between context line processing by plugin or by Difflib
     # Version 1.2.0 - 03-22-2023
     # - Abort compare with message if convert has no result.
     # - Hide identical lines, but with the option to display a number of context lines. Closes enhancement request #1.)

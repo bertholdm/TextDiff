@@ -217,6 +217,8 @@ class TextDiffDialog(QDialog):
         self.numlines.setMaxLength(2)
         self.numlines.setText(
             '5')  # HtmlDiff ist selected by default, so enable context flag and numlines and set default to 5
+        if self.context.isChecked():
+            self.numlines.setText('1')
         # if initial_value != None:
         #     self.lnumines.setText(str(initial_value))
         self.numlines.setEnabled(True)  # HtmlDiff ist selected by default, so enable context flag and numlines
@@ -225,6 +227,8 @@ class TextDiffDialog(QDialog):
                                    'lines which are shown before a difference highlight when using the “next” '
                                    'hyperlinks (setting to zero would cause the “next” hyperlinks to place the next '
                                    'difference highlight at the top of the browser without any leading context).'))
+        if int(self.numlines.text()) < 0:
+            self.numlines.setText('0')
 
         self.tabsize_label = QLabel(_('Tabsize (HtmlDiff):'))
         self.tabsize_label.setAlignment(Qt.AlignRight)
@@ -590,8 +594,9 @@ class TextDiffDialog(QDialog):
             convert_result = self.ebook_convert(book_format_info, convert_options)
             print('convert_result={0}'.format(convert_result))
             if convert_result is not None:
-                text_lines.append(convert_result)
-                print('First 10 text lines: {0}'.format(text_lines[:10]))
+                text_lines.append(convert_result)  # text_lines is a nested list (two lists with a list of lines in each)
+                for text_line in text_lines:
+                    print('First 10 text lines: {0}'.format(text_line[:10]))
         print('text_lines={0}'.format(text_lines))
         self.gui.status_bar.showMessage(_('Convert finished.'))
         if len(text_lines) < 2:
@@ -901,10 +906,18 @@ class TextDiffDialog(QDialog):
 
             # Compares fromlines and tolines (lists of strings) and returns a string which is a complete HTML table
             # showing line by line differences with inter-line and intra-line changes highlighted.
-            diff = d.make_table(text_lines[0], text_lines[1], book_attributes[0], book_attributes[1],
-                                context=diff_options['context'], numlines=diff_options['numlines']) \
-                # only for make_file: charset='utf-8'
-            print('Diff finished, diff[:1000] + diff[-200:]=' + diff[:1000] + '*****' + diff[-200:])
+            if self.context.isChecked():
+                # Context lines are processed by plugin itself
+                diff = d.make_table(text_lines[0], text_lines[1], book_attributes[0], book_attributes[1],
+                                    context=False, numlines=5) \
+                    # only for make_file: charset='utf-8'
+            else:
+                # Context lines are processed by Difflib
+                diff = d.make_table(text_lines[0], text_lines[1], book_attributes[0], book_attributes[1],
+                                    context=diff_options['context'], numlines=diff_options['numlines']) \
+                    # only for make_file: charset='utf-8'
+            print('Diff finished, diff[:1000] + diff[-200:]=' + diff[:1000] +
+                  ' (* some html table content omitted *) ' + diff[-200:])
             self.gui.status_bar.showMessage(_('Diff finished. Building final HTML output...'))
             print(_('Diff finished. Building final HTML output...'))
 
@@ -985,8 +998,7 @@ class TextDiffDialog(QDialog):
                                                             .format(len(context_table) - max_lines)) + '</i></td>'
                                               '<td class="diff_next">&nbsp;</td><td class="diff_header">&nbsp;</td>'
                                               '<td><i>' + _('[{0} identical line(s).]'
-                                                            .format(len(context_table) - max_lines)) + '</i></td></tr>'
-                                              )
+                                                            .format(len(context_table) - max_lines)) + '</i></td></tr>')
                             print('{0} identical line(s) suppressed.'.format(len(context_table) - max_lines))
                         if len(context_table) > 0:
                             diff_table.extend(context_table[-max_lines:])  # put last n context lines to output
@@ -998,18 +1010,18 @@ class TextDiffDialog(QDialog):
                         context_table.append(str(row))
                         print('Append identical row to context_table: {0}'.format(context_table))
                 # All rows are processed. Are still ignored lines after the last diff?
+                print('All rows processed - checking context table for identical lines: {0}'.format(context_table))
+                if len(context_table) > 0:
+                    diff_table.extend(context_table[:max_lines])  # put first n context lines to output
+                    print('Extend diff_table with context line(s): {0}'.format(context_table))
                 if len(context_table) > max_lines:
                     diff_table.append('<tr><td class="diff_next">&nbsp;</td><td class="diff_header">&nbsp;</td>'
                                       '<td><i>' + _('[{0} identical line(s).]'
                                                     .format(len(context_table) - max_lines)) + '</i></td>'
                                       '<td class="diff_next">&nbsp;</td><td class="diff_header">&nbsp;</td>'
                                       '<td><i>' + _('[{0} identical line(s).]'
-                                                    .format(len(context_table) - max_lines)) + '</i></td></tr>'
-                                      )
+                                                    .format(len(context_table) - max_lines)) + '</i></td></tr>')
                     print('{0} identical line(s) suppressed.'.format(len(context_table) - max_lines))
-                if len(context_table) > 0:
-                    diff_table.extend(context_table[-max_lines:])  # put last n context lines to output
-                    print('Extend diff_table with context lines: {0}'.format(context_table[-max_lines:]))
                 # print(_('List diff_table has now {0} entries.'.format(len(diff_table))))
                 # print(_('List diff_table[:100]={0}'.format(diff_table[:100])))
                 # Replace the marker with the conten of the diff_table
