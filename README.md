@@ -34,6 +34,8 @@ Limitations:
 
 Version History:
 ----------------
+Version 1.2.2 - 06-29-2023
+- Disable buttons to save diff result until a result is generated (Thanks to Robert1a)
 Version 1.2.1 - 03-23-2023
 - Switch between context line processing by plugin or by Difflib
 Version 1.2.0 - 03-22-2023

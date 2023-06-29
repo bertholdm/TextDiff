@@ -6,6 +6,6 @@ It depenmds on Calibre's convert utility (https://manual.calibre-ebook.com/gener
 
 The source code is at https://github.com/bertholdm/TextDiff.
 
-Version 1.2.0 - 03-22-2023
+Version 1.2.1 - 03-23-2023
 
 

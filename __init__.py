@@ -2,11 +2,8 @@
 
 # The class that all Interface Action plugin wrappers must inherit
 
-import sys, os
-import logging
 import gettext
 
-from calibre.constants import DEBUG
 from calibre.customize import InterfaceActionBase
 
 __license__ = 'GPL v3'
@@ -16,6 +13,7 @@ __docformat__ = 'restructuredtext en'
 # Load translations
 _ = gettext.gettext
 load_translations()
+
 
 # logger = logging.getLogger(__name__)
 # loghandler=logging.StreamHandler()
@@ -50,6 +48,8 @@ class TextDiffBase(InterfaceActionBase):
     # ToDo: Check/convert multiple cols to sequential text
 
     # History
+    # Version 1.2.2 - 06-29-2023
+    # - Disable buttons to save diff result until a result is generated (Thanks to Robert1a)
     # Version 1.2.1 - 03-23-2023
     # - Switch between context line processing by plugin or by Difflib
     # Version 1.2.0 - 03-22-2023

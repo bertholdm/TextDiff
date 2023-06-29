@@ -77,6 +77,9 @@ class TextDiffAction(InterfaceAction):
         self.menu.addAction(_('About...'), self.about)
         self.menu.addAction(_('Help...'), self.help)
         self.qaction.setMenu(self.menu)
+        print('Textdiff: self.menu:')
+        # self.menu.dumpObjectInfo()
+        # self.menu.dumpObjectTree()
 
     def show_dialog(self):
         # The base plugin object defined in __init__.py

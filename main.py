@@ -1,12 +1,12 @@
 # The main file of Calibre TextDiff Plugin.
 
-import time, os, math
+import time, os
 import json
 import re
 import gettext
 from datetime import date, datetime, timezone
 from io import StringIO, BytesIO
-from pathlib import Path
+# from pathlib import Path
 import difflib  # https://github.com/python/cpython/blob/3.11/Lib/difflib.py
 
 from bs4 import BeautifulSoup
@@ -177,6 +177,9 @@ class TextDiffDialog(QDialog):
         self.refresh_formats_button.clicked.connect(self.refresh_formats)
 
         # linejunk=None, charjunk=IS_CHARACTER_JUNK (difflib.ndiff)
+        # See https://github.com/python/cpython/issues/58540
+        # See https://de.wikipedia.org/wiki/Gestalt_Pattern_Matching
+        # Possible workaround see: https://stackoverflow.com/questions/63893283/difflib-ignore-whitespace-diffs-w-ndiff
 
         self.compare_output_label = QLabel(_('Display format:'))
         self.compare_output_label.setAlignment(Qt.AlignRight)
@@ -269,10 +272,13 @@ class TextDiffDialog(QDialog):
         self.ratio.setToolTip(_('A measure of the sequences’ similarity as a float in the range [0, 1].'))
 
         self.copy_diff_file_button = QPushButton(_('Copy output to clipboard.'), self)
+        self.copy_diff_file_button.setEnabled(False)
         self.copy_diff_file_button.clicked.connect(self.copy_diff_file)
         self.save_diff_file_button = QPushButton(_('Save output to file'), self)
+        self.save_diff_file_button.setEnabled(False)
         self.save_diff_file_button.clicked.connect(self.save_diff_file)
         self.add_book_button = QPushButton(_('Save output as book'), self)
+        self.add_book_button.setEnabled(False)
         self.add_book_button.clicked.connect(self.add_book)
 
         # addWidget(*Widget, row, column, rowspan, colspan)
@@ -476,6 +482,9 @@ class TextDiffDialog(QDialog):
         # Clear output widgets
         self.ratio.setText('')
         self.text_browser.clear()
+        self.copy_diff_file_button.setEnabled(False)
+        self.save_diff_file_button.setEnabled(False)
+        self.add_book_button.setEnabled(False)
 
     def close_dialog(self):
         pass
@@ -686,6 +695,10 @@ class TextDiffDialog(QDialog):
                 else:
                     self.text_browser.setPlainText(_('Unknown difftype or result:\\n') + self.diff)
 
+        if self.diff:
+            self.copy_diff_file_button.setEnabled(True)
+            self.save_diff_file_button.setEnabled(True)
+            self.add_book_button.setEnabled(True)
         QApplication.restoreOverrideCursor()
         self.gui.status_bar.showMessage(_('Compare finished.'))
         self.gui.activateWindow()  # Bring window in front
