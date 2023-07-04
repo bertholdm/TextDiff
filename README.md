@@ -1,4 +1,4 @@
-[GUI Plugin] TextDiff - Version 1.2.1 - 03-23-2023
+[GUI Plugin] TextDiff - Version 1.2.2 - 06-29-2023
 
 A Calibre GUI plugin for finding text differences in two book formats.
 
@@ -63,7 +63,7 @@ If you find any issues or have suggestions, please report them on GitHub or in t
 
 ---
 
-[GUI-Plugin] TextDiff - Version 1.2.1 - 03-23-2023
+[GUI-Plugin] TextDiff - Version 1.2.2 - 06-29-2023
 
 Ein Calibre GUI-Plugin zum Finden von Textunterschieden in zwei Buchformaten.
 
@@ -100,6 +100,8 @@ Einschränkungen:
 
 Versionsgeschichte:
 -------------------
+Version 1.2.2 - 06-29-2023
+- Schaltflächen zum Speichern des Vergleichsergebnisses deaktiviert, bis Vergleichsergebnis erstellt wurde (Dank an Robert1a)
 Version 1.2.1 - 03-23-2023
 - Wahl zwischen Kontext-Verarbeitung durch Plugin oder Difflib.
 Version 1.2.0 - 03-22-2023
