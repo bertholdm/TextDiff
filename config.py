@@ -93,7 +93,7 @@ class ConfigTab(QWidget):
         QWidget.__init__(self)
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
-        label = QLabel(_('These settings control the basic features of the plugin. Not used yet!'))
+        label = QLabel(_('These settings controls the basic features of the plugin. Not used yet!'))
         label.setWordWrap(True)
         self.layout.addWidget(label)
         self.layout.addSpacing(5)

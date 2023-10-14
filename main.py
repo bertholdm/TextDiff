@@ -451,7 +451,7 @@ class TextDiffDialog(QDialog):
                     d = error_dialog(self.gui, _('TextDiff error'), msg, show_copy_button=False)
                     d.exec_()
                     return None
-                # ToDo: How name widgets for looping?
+                # ToDo: How to name widgets for loops with variables?
                 if i == 0:
                     self.file_info_0.setText(str(self.book_ids[i]) + '=' + mi.title)
                     self.txt_file_content_combo_0.clear()
@@ -482,6 +482,7 @@ class TextDiffDialog(QDialog):
         # Clear output widgets
         self.ratio.setText('')
         self.text_browser.clear()
+        # ToDo: reset temp dir
         self.copy_diff_file_button.setEnabled(False)
         self.save_diff_file_button.setEnabled(False)
         self.add_book_button.setEnabled(False)
@@ -591,6 +592,10 @@ class TextDiffDialog(QDialog):
         text_formats = []
         # convert_options = ' -v -v –enable-heuristics '
         convert_options = ' -v -v '
+        # Save the output from different stages of the conversion pipeline to the specified folder.
+        # Useful if you are unsure at which stage of the conversion process a bug is occurring.
+        # convert_options = convert_options + ' --debug-pipeline "/calibre-debug"'
+        # convert_options = convert_options + ' --no-images'
         convert_options = convert_options + ' --sr1-search "(?m)^\s*$" --sr1-replace ""'  # For Mac
         # convert_options = convert_options + ' --sr1-search (?m)^\s*$ --sr1-replace ""'
         # if re.match(r'^\s*$', line):
@@ -711,6 +716,8 @@ class TextDiffDialog(QDialog):
         # ToDo: Remove soft hyphens
         # ebook-polish [options] input_file [output_file]
         # --remove-soft-hyphens
+        # or
+        # use "polish ebooks" plugin
         pass
 
     def ebook_convert(self, book_format_info, convert_options):
@@ -752,12 +759,29 @@ class TextDiffDialog(QDialog):
 
         # print("Time for ebook_convert so far: {0:3.4f} seconds".format(time.perf_counter() - start_time))
 
+        # args = '"' + book_format_info[3] + '"' + ' "' + txt_format_path + '"' + convert_options
         os.system('ebook-convert ' + '"' + book_format_info[3] + '"' + ' "' +
                   txt_format_path + '"' + convert_options)
-        # ToDo: If in DEBUG mode, prevent convsersion window from close (Windoes: pause)
+        # ToDo: If in DEBUG mode, prevent conversion window from close (Windoes: pause)
         # Return Value: On Unix, the return value is the exit status of the process and on Windows, the return value
         # is the value returned by the system shell after running command.
         # https://stackoverflow.com/questions/5469301/run-a-bat-file-using-python-code
+
+        # Alternate:
+        # import subprocess
+        # try:
+        #     result = subprocess.run(
+        #         ["ebook-convert", args], timeout=10, check=True, Text=True, capture_output=True, encoding="utf-8"
+        #     )
+        # except FileNotFoundError as exc:
+        #     print(f"Process failed because the executable could not be found.\n{exc}")
+        # except subprocess.CalledProcessError as exc:
+        #     print(
+        #         f"Process failed because did not return a successful return code. "
+        #         f"Returned {exc.returncode}\n{exc}"
+        #     )
+        # except subprocess.TimeoutExpired as exc:
+        #     print(f"Process timed out.\n{exc}")
 
         # print("Time for ebook_convert so far: {0:3.4f} seconds".format(time.perf_counter() - start_time))
 
@@ -773,6 +797,11 @@ class TextDiffDialog(QDialog):
                 # If you use the None as a function argument, the filter method will remove any element
                 # from the iterable that it considers to be false.
                 txt_file_content = list(filter(None, (line.rstrip() for line in f)))
+
+                # Substitute quotes and dashes characters with standard chars
+                # ToDo: User setting (prefs)
+                txt_file_content = self.substitute_chars(txt_file_content)
+
             # print('File {0} has {1} lines.'.format(txt_format_path, len(txt_file_content)))
             # print('The first 10 items are: {0}'.format(txt_file_content[:10]))
         else:
@@ -780,6 +809,9 @@ class TextDiffDialog(QDialog):
                          _('The file {0} don\'t exist. Probably conversion to text format failed.'.format(
                              txt_format_path)),
                          show=True)
+            QApplication.restoreOverrideCursor()
+            self.gui.status_bar.showMessage(_('Compare aborted.'))
+            self.gui.activateWindow()  # Bring window in front
             return None
 
             # print("Time for ebook_convert so far: {0:3.4f} seconds".format(time.perf_counter() - start_time))
@@ -1110,6 +1142,62 @@ class TextDiffDialog(QDialog):
         diff = text
         # print('diff[:1000]={0}'.format(diff[:1000]))
         return diff
+
+    def substitute_chars(self, old_text):
+
+        return old_text
+        # The following code works in little strings but with big strings it kills calibre
+
+        # Soft Hyphens -> see remove_soft_hyphens()
+        # std chars are '-', "'", '"'
+        replacements = {
+            # EN DASH / HYPHEN (U+002D)
+            '\u1806': '\u002D',  # '᠆'
+            '\u2010': '\u002D',  # '‐'
+            '\u2011': '\u002D',  # '‑'
+            '\u2012': '\u002D',  # '‒'
+            '\u2013': '\u002D',  # '–'
+            '\uFE58': '\u002D',  # '﹘'
+            '\uFE63': '\u002D',  # '﹣'
+            '\uFF0D': '\u002D',  # '－'
+            # SINGLE QUOTES (U+0027)
+            '\u003C': '\u0027',  # '<'
+            '\u003E': '\u0027',  # '>'
+            '\u2018': '\u0027',  # '‘'
+            '\u2019': '\u0027',  # '’'
+            '\u201A': '\u0027',  # '‚'
+            '\u201B': '\u0027',  # '‛'
+            '\u2039': '\u0027',  # '‹'
+            '\u203A': '\u0027',  # '›'
+            '\u275B': '\u0027',  # '❛'
+            '\u275C': '\u0027',  # '❜'
+            '\u276E': '\u0027',  # '❮'
+            '\u276F': '\u0027',  # '❯'
+            '\uFF07': '\u0027',  # '＇'
+            '\u300C': '\u0027',  # '「'
+            '\u300D': '\u0027',  # '」'
+            # DOUBLE QUOTES (U+0022)
+            '\u00AB': '\u0022',  # '«'
+            '\u00BB': '\u0022',  # '»'
+            '\u201C': '\u0022',  # '“'
+            '\u201D': '\u0022',  # '”'
+            '\u201E': '\u0022',  # '„'
+            '\u201F': '\u0022',  # '‟'
+            '\u275D': '\u0022',  # '❝'
+            '\u275E': '\u0022',  # '❞'
+            '\u2E42': '\u0022',  # '⹂'
+            '\u301D': '\u0022',  # '〝'
+            '\u301E': '\u0022',  # '〞'
+            '\u301F': '\u0022',  # '〟'
+            '\uFF02': '\u0022',  # '＂'
+            '\u300E': '\u0022',  # '『'
+            '\u300F': '\u0022',  # '』'
+        }
+
+        replacements = dict((re.escape(k), v) for k, v in replacements.items())  # esape regular expression metacharacters
+        pattern = re.compile("|".join(replacements.keys()))
+        new_text = pattern.sub(lambda m: replacements[re.escape(m.group(0))], str(old_text))
+        return new_text
 
     def get_txt_format_path(self, book_format_info):
         # Generate a path for the text file

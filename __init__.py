@@ -40,14 +40,20 @@ class TextDiffBase(InterfaceActionBase):
     """
     name = 'TextDiff'
     description = _('A Calibre GUI plugin to find text differences in two book formats.')
-    supported_platforms = ['windows', 'osx', 'linux']
+    platforms = ['windows', 'osx', 'linux']
+    minimum_calibre_version = (5, 0, 0)
     author = 'Michael Detambel, <info@michael-detambel.de>'
-    version = (1, 2, 1)
+    version = (1, 2, 3)
+    released = ('10-12-2023')
 
     # ToDo: Check PDF first on decryption and image only
     # ToDo: Check/convert multiple cols to sequential text
+    # ToDo: If you care about speed use the extract_text() function from calibre.db.fts.text
 
     # History
+    # Version 1.2.3 - 10-12-2023
+    # - Workaround when calibre hangs in not readable PDFs.
+    # - Substitute quotes and dashes characters with standard characters before diff
     # Version 1.2.2 - 06-29-2023
     # - Disable buttons to save diff result until a result is generated (Thanks to Robert1a)
     # Version 1.2.1 - 03-23-2023
