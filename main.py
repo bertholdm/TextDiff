@@ -22,6 +22,7 @@ from calibre.gui2 import gprefs, error_dialog, info_dialog
 from calibre.ebooks.conversion.config import (get_input_format_for_book, sort_formats_by_preference)
 from calibre.ebooks.covers import generate_cover
 from calibre.ebooks.oeb.iterator import EbookIterator
+# from calibre.ebooks.pdf.pdftohtml import pdftohtml
 from calibre.library import db
 from calibre.ptempfile import PersistentTemporaryFile, PersistentTemporaryDirectory
 from calibre.utils.date import utcnow
@@ -202,7 +203,8 @@ class TextDiffDialog(QDialog):
         self.context_mode = QCheckBox(_('Context handling by plugin'))
         self.context_mode.setToolTip(_('Check, if context handling is is to be performed by plugin, not by Difflib.'))
         self.context_mode.setChecked(True)
-        self.context = QCheckBox(_('Suppress identical lines, preserve n context lines'))
+        self.context = QCheckBox(_('Suppress identical lines, preserve n context line(s)'))
+
         # Set context to True when contextual differences are to be shown,
         # else the default is False to show the full files.
         self.context.setEnabled(True)  # HtmlDiff ist selected by default, so enable context flag
@@ -210,6 +212,7 @@ class TextDiffDialog(QDialog):
         self.context.stateChanged.connect(self.on_context_ChangedState)
         self.context.setToolTip(_('Set context to True when contextual differences are to be shown, '
                                   'else the default is False to show the full files.'))
+
         # numlines defaults to 5. When context is True numlines controls the number of context lines which surround
         # the difference highlights. When context is False numlines controls the number of lines which are shown
         # before a difference highlight when using the “next” hyperlinks (setting to zero would cause the “next”
@@ -235,6 +238,16 @@ class TextDiffDialog(QDialog):
                                    'difference highlight at the top of the browser without any leading context).'))
         if int(self.numlines.text()) < 0:
             self.numlines.setText('0')
+
+        # Toggle debug print on/off
+        self.debug_print = QCheckBox(_('Debug print'))
+        self.debug_print.setToolTip(_('Check to toggle debug print on.'))
+        self.debug_print.setChecked(False)
+
+        # Toggle debug print on/off
+        self.subst_chars = QCheckBox(_('Substitute chars'))
+        self.subst_chars.setToolTip(_('Check to Substitute chars (fixed table for now).'))
+        self.subst_chars.setChecked(False)
 
         self.tabsize_label = QLabel(_('Tabsize (HtmlDiff):'))
         self.tabsize_label.setAlignment(Qt.AlignRight)
@@ -312,6 +325,8 @@ class TextDiffDialog(QDialog):
         self.grid_layout.addLayout(self.option_box2, 6, 0, 1, 2)
         # row 7
         self.option_box3 = QHBoxLayout()
+        self.option_box3.addWidget(self.debug_print)
+        self.option_box3.addWidget(self.subst_chars)
         self.option_box3.addWidget(self.tabsize_label)
         self.option_box3.addWidget(self.tabsize)
         self.option_box3.addWidget(self.wrapcolumn_label)
@@ -404,7 +419,8 @@ class TextDiffDialog(QDialog):
     def sizeHint(self):
         # notwendig? (stammt aus single.py)
         geom = self.screen().availableSize()
-        # print('geom={0}'.format(geom))
+        if self.debug_print.isChecked():
+            print('geom={0}'.format(geom))
         min_width = 300
         min_height = 400
         self.setMinimumWidth(min_width)
@@ -412,7 +428,8 @@ class TextDiffDialog(QDialog):
         # nh, nw = max(300, geom.height() - 400), max(400, geom.width() - 400)
         nw = max(min_width, geom.width() - min_width - 300)
         nh = max(min_height, geom.height() - min_height)
-        # print('nw={0},nh={1}'.format(nw, nh))
+        if self.debug_print.isChecked():
+            print('nw={0},nh={1}'.format(nw, nh))
         return QSize(nw, nh)
 
     @property
@@ -511,9 +528,11 @@ class TextDiffDialog(QDialog):
         # This is the main process
 
         # Start timer
-        overall_start_time = time.perf_counter()
+        if self.debug_print.isChecked():
+            overall_start_time = time.perf_counter()
 
         log('Starting compare...')
+        print(_('Starting compare...'))
         self.gui.status_bar.showMessage(_('Starting compare...'))
         QApplication.setOverrideCursor(Qt.WaitCursor)
 
@@ -528,7 +547,8 @@ class TextDiffDialog(QDialog):
                                 show=True)
         if book_count > 2:
             return error_dialog(self.gui, _('Too much books selected'),
-                                _('You must select one book with more than one format or two books to perform this action.'),
+                                _('You must select one book with more than one format or two books with at least '
+                                  'two formats in sum to perform this action.'),
                                 show=True)
 
         available_formats = []
@@ -539,13 +559,16 @@ class TextDiffDialog(QDialog):
         selected_formats = []
         selected_formats.append(str(self.txt_file_content_combo_0.currentText()).upper())
         selected_formats.append(str(self.txt_file_content_combo_1.currentText()).upper())
-        # print('selected_formats: {0}'.format(selected_formats))  # ['PDF', 'PDF']
+        if self.debug_print.isChecked():
+            print('selected_formats: {0}'.format(selected_formats))  # ['PDF', 'PDF']
         for book_id in book_ids:
-            # print('Fetching metadata from book_id {0}...'.format(book_id))
+            if self.debug_print.isChecked():
+                print('Fetching metadata from book_id {0}...'.format(book_id))
             mi = db.get_metadata(book_id, index_is_id=True, get_user_categories=False)
             books_metadata.append(mi)
             available_formats.append({'book_id': book_id, 'formats': mi.formats})
-        # print('available_formats={0}'.format(available_formats))  # [[book, [fromat, format]], [book, [fromat]]]
+        if self.debug_print.isChecked():
+            print('available_formats={0}'.format(available_formats))  # [[book, [fromat, format]], [book, [fromat]]]
 
         # Fetch title and path info for the selected book formats
 
@@ -556,7 +579,8 @@ class TextDiffDialog(QDialog):
         # print('available_formats[{0}][{1}]={2}'.format(index, key, available_formats[index][key]))
 
         # for format in available_formats[i][1]:  # Loop thru formats list for this book
-        # print('selected_formats={0}'.format(selected_formats))
+        if self.debug_print.isChecked():
+            print('selected_formats={0}'.format(selected_formats))
         for i in range(2):  # ToDo: check len(selected_formats)?
             # print('Fetching info for selected format #{0}'.format(i))
             if book_count == 1:
@@ -568,13 +592,14 @@ class TextDiffDialog(QDialog):
                 title = books_metadata[j].title
                 format = selected_formats[i]
                 book_formats_info.append((book_id, title, format, db.format_abspath(book_id, format, index_is_id=True)))
-        # print('book_formats_info={0}'.format(book_formats_info))
+        if self.debug_print.isChecked():
+            print('book_formats_info={0}'.format(book_formats_info))
         # [(285, 'Meister Antifers wunderbare Abenteuer', 'EPUB', 'E:\\Bibliotheken\\Abenteuer\\Jules Verne\\Meister Antifers wunderbare Abenteu (285)\\Meister Antifers wunderbare Abe - Jules Verne.epub'),
         # (285, 'Meister Antifers wunderbare Abenteuer', 'PDF', 'E:\\Bibliotheken\\Abenteuer\\Jules Verne\\Meister Antifers wunderbare Abenteu (285)\\Meister Antifers wunderbare Abe - Jules Verne.pdf')]
 
         if len(book_formats_info) < 2:
             return error_dialog(self.gui, _('Not enough formats to compare'),
-                                _('The selected book(s) must have at least two formats to compare.'),
+                                _('The selected book(s) must have at least two formats in sum to compare.'),
                                 show=True)
 
         # ToDo: Start progressbar?
@@ -582,11 +607,32 @@ class TextDiffDialog(QDialog):
         # self.set_progressbar_label(_('Fetching metadata...'))
         # self.show_progressbar(2)
 
-        # size = 0
         for book_format_info in book_formats_info:
             fmt_metadata = self.db.format_metadata(book_format_info[0], book_format_info[2])
             size = fmt_metadata['size']
-            # print('size={0}'.format(size))
+            if self.debug_print.isChecked():
+                print('book_format_info[3]={0}'.format(book_format_info[3]))
+                print('book format is {0}'.format(book_format_info[2]))
+                print('size={0}'.format(size))
+            # Check if pdf is readable
+            if book_format_info[2] == 'PDF':
+                error_text = ''
+                possible_pdf_error = self.try_pdf_format(book_format_info[3])
+                if self.debug_print.isChecked():
+                    print('possible_pdf_error={0}'.format(possible_pdf_error))
+                if 'password_protected' in possible_pdf_error:
+                    error_text = _('Could not open pdf format of book no. {0} ({1}). Probably password protected. Abort.')\
+                        .format(book_format_info[0], book_format_info[1])
+                elif 'no_text' in possible_pdf_error:
+                    error_text = _('PDF format of book no. {0} ({1}) contains no text (pdf from image). Abort.')\
+                        .format(book_format_info[0], book_format_info[1])
+                elif 'other_error' in possible_pdf_error:
+                    error_text = _('Other error in pdf format of book no. {0} ({1}). Abort.')\
+                        .format(book_format_info[0], book_format_info[1])
+                if possible_pdf_error != '':
+                    QApplication.restoreOverrideCursor()
+                    return error_dialog(self.gui, _('Error in pdf format'), error_text, show=True)
+
             # self.increment_progressbar()
 
         text_formats = []
@@ -607,6 +653,7 @@ class TextDiffDialog(QDialog):
 
         text_lines = []  # List of text lines for each converted format
 
+        print(_('Starting convert...'))
         self.gui.status_bar.showMessage(_('Starting convert...'))
 
         for book_format_info in book_formats_info:
@@ -614,18 +661,23 @@ class TextDiffDialog(QDialog):
             # Convert the input format to text format, even if format is already TXT to apply convert options
             # The function returns a list of strings
             convert_result = self.ebook_convert(book_format_info, convert_options)
-            print('convert_result={0}'.format(convert_result))
+            if self.debug_print.isChecked():
+                print('convert_result={0}'.format(convert_result))
             if convert_result is not None:
                 text_lines.append(convert_result)  # text_lines is a nested list (two lists with a list of lines in each)
-                for text_line in text_lines:
-                    print('First 10 text lines: {0}'.format(text_line[:10]))
-        print('text_lines={0}'.format(text_lines))
+                if self.debug_print.isChecked():
+                    for text_line in text_lines:
+                        print('First 10 text lines: {0}'.format(text_line[:10]))
+        if self.debug_print.isChecked():
+            print('text_lines={0}'.format(text_lines))
+        print(_('Convert finished.'))
         self.gui.status_bar.showMessage(_('Convert finished.'))
         if len(text_lines) < 2:
             self.text_browser.setPlainText(_('No compare possible, since at least one convert failed.'))
         else:
             # print("Time for compare() so far: {0:3.4f} seconds".format(time.perf_counter() - overall_start_time))
             # print('Format conversion finished. Beginning compare...')
+            print(_('Format conversion finished. Beginning compare...'))
             self.gui.status_bar.showMessage(_('Format conversion finished. Beginning compare...'))
 
             diff_options = {}
@@ -705,6 +757,7 @@ class TextDiffDialog(QDialog):
             self.save_diff_file_button.setEnabled(True)
             self.add_book_button.setEnabled(True)
         QApplication.restoreOverrideCursor()
+        print(_('Compare finished.'))
         self.gui.status_bar.showMessage(_('Compare finished.'))
         self.gui.activateWindow()  # Bring window in front
         # self.hide_progressbar()
@@ -738,14 +791,15 @@ class TextDiffDialog(QDialog):
         # Also only takes about 1/20 of the time to call ebook-convert.
 
         print(_('Enter ebook_convert()...'))
-        # print('book_format_info={0}'.format(book_format_info))
-        start_time = time.perf_counter()
+        if self.debug_print.isChecked():
+            print('book_format_info={0}'.format(book_format_info))
+            start_time = time.perf_counter()
 
         # Generate a path for the text file
         txt_format_path = self.get_txt_format_path(book_format_info)
-        # print('txt_format_path={0}'.format(txt_format_path))
-
-        # print("Time for ebook_convert so far: {0:3.4f} seconds".format(time.perf_counter() - start_time))
+        if self.debug_print.isChecked():
+            print('txt_format_path={0}'.format(txt_format_path))
+            print('Time for ebook_convert so far: {0:3.4f} seconds'.format(time.perf_counter() - start_time))
 
         # ToDo: Remove soft hyphens in input file?
         # self.remove_soft_hyphens(input_file, output_file, options)
@@ -757,7 +811,8 @@ class TextDiffDialog(QDialog):
         if os.path.exists(txt_format_path):
             os.remove(txt_format_path)
 
-        # print("Time for ebook_convert so far: {0:3.4f} seconds".format(time.perf_counter() - start_time))
+        if self.debug_print.isChecked():
+            print('Time for ebook_convert so far: {0:3.4f} seconds'.format(time.perf_counter() - start_time))
 
         # args = '"' + book_format_info[3] + '"' + ' "' + txt_format_path + '"' + convert_options
         os.system('ebook-convert ' + '"' + book_format_info[3] + '"' + ' "' +
@@ -783,7 +838,8 @@ class TextDiffDialog(QDialog):
         # except subprocess.TimeoutExpired as exc:
         #     print(f"Process timed out.\n{exc}")
 
-        # print("Time for ebook_convert so far: {0:3.4f} seconds".format(time.perf_counter() - start_time))
+        if self.debug_print.isChecked():
+            print('Time for ebook_convert so far: {0:3.4f} seconds'.format(time.perf_counter() - start_time))
 
         # "readlines" returns a list containing the lines.
         # with open(txt_file_path[0]) as f:
@@ -791,30 +847,32 @@ class TextDiffDialog(QDialog):
         # with open(txt_file_path[1]) as f:
         #     txt_file_content[1] = list(line for line in (l.strip() for l in f) if line)
         if os.path.exists(txt_format_path):
-            # print('Reading {0} content in list...'.format(txt_format_path))
+            if self.debug_print.isChecked():
+                print('Reading {0} content in list...'.format(txt_format_path))
             with open(txt_format_path) as f:
                 # Read text file line by line and get rid of empty lines
                 # If you use the None as a function argument, the filter method will remove any element
                 # from the iterable that it considers to be false.
                 txt_file_content = list(filter(None, (line.rstrip() for line in f)))
 
-                # Substitute quotes and dashes characters with standard chars
-                # ToDo: User setting (prefs)
+                # Substitute quotes and dashes characters with standard chars (optional)
                 txt_file_content = self.substitute_chars(txt_file_content)
 
             # print('File {0} has {1} lines.'.format(txt_format_path, len(txt_file_content)))
             # print('The first 10 items are: {0}'.format(txt_file_content[:10]))
         else:
             error_dialog(self.gui, _('TextDiff plugin'),
-                         _('The file {0} don\'t exist. Probably conversion to text format failed.'.format(
+                         _('The file "{0}" don\'t exist. Probably conversion to text format failed.'.format(
                              txt_format_path)),
                          show=True)
             QApplication.restoreOverrideCursor()
+            print(_('Compare aborted.'))
             self.gui.status_bar.showMessage(_('Compare aborted.'))
             self.gui.activateWindow()  # Bring window in front
             return None
 
-            # print("Time for ebook_convert so far: {0:3.4f} seconds".format(time.perf_counter() - start_time))
+        if self.debug_print.isChecked():
+            print('Time for ebook_convert so far: {0:3.4f} seconds'.format(time.perf_counter() - start_time))
 
         # Delete the generated text file
         print(_('Deleting temp file...'))
@@ -824,14 +882,16 @@ class TextDiffDialog(QDialog):
 
         print(_('Finishing ebook_convert().'))
         self.gui.status_bar.showMessage(_('Finishing ebook_convert().'))
-        # print("Time for ebook_convert so far: {0:3.4f} seconds".format(time.perf_counter() - start_time))
+        if self.debug_print.isChecked():
+            print('Time for ebook_convert so far: {0:3.4f} seconds'.format(time.perf_counter() - start_time))
 
         return txt_file_content
 
     def create_diff(self, text_lines, book_formats_info, diff_options):
 
-        print(_('Enter create_diff()...'))
-        # print('diff_options={0}'.format(diff_options))
+        if self.debug_print.isChecked():
+            print('Enter create_diff()...')
+            print('diff_options={0}'.format(diff_options))
 
         diff = None
         # diff_strict = None
@@ -841,12 +901,15 @@ class TextDiffDialog(QDialog):
         # First argument is a function to return 'junk':
         # lambda x: x == ' ' ignores blanks
         # Start timer
-        start_time = time.perf_counter()
+        if self.debug_print.isChecked():
+            start_time = time.perf_counter()
         ratio = difflib.SequenceMatcher(None, text_lines[0], text_lines[1]).ratio()
         stop_time = time.perf_counter()
-        # print("Time for calculate ratio was: {0:3.4f} seconds".format(stop_time - start_time))
+        if self.debug_print.isChecked():
+            print('Time for calculate ratio was: {0:3.4f} seconds'.format(stop_time - start_time))
         ratio = round(ratio, 4)
-        # print('ratio={0}'.format(ratio))
+        if self.debug_print.isChecked():
+            print('ratio={0}'.format(ratio))
 
         if ratio == 1.0:
             diff = _('No differences found!')
@@ -858,16 +921,17 @@ class TextDiffDialog(QDialog):
         # ndiff: linejunk=None, charjunk=IS_CHARACTER_JUNK)
         # SequenceMatcher: ratio
 
-        # print("Time for create_diff so far: {0:3.4f} seconds".format(time.perf_counter() - start_time))
+        if self.debug_print.isChecked():
+            print('Time for create_diff so far: {0:3.4f} seconds'.format(time.perf_counter() - start_time))
 
         txt_format_paths = []
         for book_format_info in book_formats_info:
             txt_format_paths.append(self.get_txt_format_path(book_format_info))
 
         # Start timer
-        start_time = time.perf_counter()
-
-        # print("Time for create_diff so far: {0:3.4f} seconds".format(time.perf_counter() - start_time))
+        if self.debug_print.isChecked():
+            start_time = time.perf_counter()
+            print('Time for create_diff so far: {0:3.4f} seconds'.format(time.perf_counter() - start_time))
 
         # https://docs.python.org/3/library/difflib.html
         if diff_options['difftype'] == 'HTML':
@@ -889,10 +953,12 @@ class TextDiffDialog(QDialog):
             d._table_template = self.table_template
             # d._file_template = self.file_template
             styles = self.styles  # Do not change the template itself
-            # print('diff_options[font]={0}'.format(diff_options['font']))
-            # print('styles before replace={0}'.format(styles))
+            if self.debug_print.isChecked():
+                print('diff_options[font]={0}'.format(diff_options['font']))
+                print('styles before replace={0}'.format(styles))
             styles = styles.replace('monospace', diff_options['font'])
-            # print('styles after replace={0}'.format(styles))
+            if self.debug_print.isChecked():
+                print('styles after replace={0}'.format(styles))
             # In dark mode, QTextBrowser reverses automatically the text color (b/w),
             # but not the background color (used to highlight diffs via css)
             if QApplication.instance().is_dark_theme:
@@ -911,7 +977,8 @@ class TextDiffDialog(QDialog):
                 before_table_template = before_table_template.replace('aaffaa', '550055')  # diff_add
                 before_table_template = before_table_template.replace('ffff77', '000088')  # diff_chg
                 before_table_template = before_table_template.replace('ffaaaa', '005555')  # duiff_sub
-            # print('before_table_template={0}'.format(before_table_template))
+            if self.debug_print.isChecked():
+                print('before_table_template={0}'.format(before_table_template))
 
             #     """For producing HTML side by side comparison with change highlights.
             #     This class can be used to create an HTML table (or a complete HTML file
@@ -969,10 +1036,11 @@ class TextDiffDialog(QDialog):
                 diff = d.make_table(text_lines[0], text_lines[1], book_attributes[0], book_attributes[1],
                                     context=diff_options['context'], numlines=diff_options['numlines']) \
                     # only for make_file: charset='utf-8'
-            print('Diff finished, diff[:1000] + diff[-200:]=' + diff[:1000] +
-                  ' (* some html table content omitted *) ' + diff[-200:])
-            self.gui.status_bar.showMessage(_('Diff finished. Building final HTML output...'))
+            if self.debug_print.isChecked():
+                print('Diff finished, diff[:1000] + diff[-200:]=' + diff[:1000] +
+                      ' (* some html table content omitted *) ' + diff[-200:])
             print(_('Diff finished. Building final HTML output...'))
+            self.gui.status_bar.showMessage(_('Diff finished. Building final HTML output...'))
 
             # Caution: if no differences found, difflib.make_file returns a table with an appropriate message text,
             # difflib.make_table returns the complete text (with no differences marked off course).
@@ -1031,13 +1099,14 @@ class TextDiffDialog(QDialog):
                 # - Loop thru table body rows and build another text blob
                 # - Replace marker in text blob 1 with text blob 2
 
+                print(_('Stripping identical lines...'))
                 self.gui.status_bar.showMessage(_('Stripping identical lines...'))
-                print('Stripping identical lines. Preserving max. {0} context line(s).'.format(max_lines))
 
                 table_soup = BeautifulSoup(diff, 'html.parser')
                 table_body = table_soup.find('tbody')
                 table_soup.find('tbody').replace_with('***put tbody here***')
-                # print(_('table_soup={0}'.format(table_soup)))
+                if self.debug_print.isChecked():
+                    print('table_soup={0}'.format(table_soup))
                 context_table = []
                 diff_table = []
 
@@ -1047,42 +1116,54 @@ class TextDiffDialog(QDialog):
                     if '<span class="diff_' in str(row):  # This is a row with differences
                         if len(context_table) > max_lines:
                             diff_table.append('<tr><td class="diff_next">&nbsp;</td><td class="diff_header">&nbsp;</td>'
-                                              '<td><i>' + _('[{0} identical line(s).]'
-                                                            .format(len(context_table) - max_lines)) + '</i></td>'
-                                              '<td class="diff_next">&nbsp;</td><td class="diff_header">&nbsp;</td>'
-                                              '<td><i>' + _('[{0} identical line(s).]'
-                                                            .format(len(context_table) - max_lines)) + '</i></td></tr>')
-                            print('{0} identical line(s) suppressed.'.format(len(context_table) - max_lines))
+                                              + '<td><i>'
+                                              + _('[{0} identical line(s).]'.format(str(len(context_table) - max_lines)))
+                                              + '</i></td>'
+                                              + '<td class="diff_next">&nbsp;</td><td class="diff_header">&nbsp;</td>'
+                                              + '<td><i>'
+                                              + _('[{0} identical line(s).]'.format(str(len(context_table) - max_lines)))
+                                              + '</i></td></tr>')
+                            if self.debug_print.isChecked():
+                                print('{0} identical line(s) suppressed.'.format(str(len(context_table) - max_lines)))
                         if len(context_table) > 0:
                             diff_table.extend(context_table[-max_lines:])  # put last n context lines to output
-                            print('Extend diff_table with context lines: {0}'.format(context_table[-max_lines:]))
+                            if self.debug_print.isChecked():
+                                print('Extending diff_table with context line(s): {0}'.format(context_table[-max_lines:]))
                             context_table = []  # Context lines are written, so empty the context list
                         diff_table.append(str(row))  # Put the diff row to output
-                        print('Append not identical row to diff_table: {0}'.format(str(row)))
+                        if self.debug_print.isChecked():
+                            print('Appending not identical row to diff_table: {0}'.format(str(row)))
                     else:
                         context_table.append(str(row))
-                        print('Append identical row to context_table: {0}'.format(context_table))
+                        if self.debug_print.isChecked():
+                            print('Appending identical row to context_table: {0}'.format(context_table))
                 # All rows are processed. Are still ignored lines after the last diff?
-                print('All rows processed - checking context table for identical lines: {0}'.format(context_table))
+                if self.debug_print.isChecked():
+                    print('All rows are processed - checking context table for identical lines: {0}'.format(context_table))
                 if len(context_table) > 0:
                     diff_table.extend(context_table[:max_lines])  # put first n context lines to output
-                    print('Extend diff_table with context line(s): {0}'.format(context_table))
+                    if self.debug_print.isChecked():
+                        print('Extending diff_table with context line(s): {0}'.format(context_table))
                 if len(context_table) > max_lines:
                     diff_table.append('<tr><td class="diff_next">&nbsp;</td><td class="diff_header">&nbsp;</td>'
-                                      '<td><i>' + _('[{0} identical line(s).]'
-                                                    .format(len(context_table) - max_lines)) + '</i></td>'
-                                      '<td class="diff_next">&nbsp;</td><td class="diff_header">&nbsp;</td>'
-                                      '<td><i>' + _('[{0} identical line(s).]'
-                                                    .format(len(context_table) - max_lines)) + '</i></td></tr>')
-                    print('{0} identical line(s) suppressed.'.format(len(context_table) - max_lines))
-                # print(_('List diff_table has now {0} entries.'.format(len(diff_table))))
-                # print(_('List diff_table[:100]={0}'.format(diff_table[:100])))
+                                      + '<td><i>' + _('[{0} identical line(s).]'.format(str(len(context_table) - max_lines)))
+                                      + '</i></td>'
+                                      + '<td class="diff_next">&nbsp;</td><td class="diff_header">&nbsp;</td>'
+                                      + '<td><i>' + _('[{0} identical line(s).]'.format(str(len(context_table) - max_lines)))
+                                      + '</i></td></tr>')
+                    if self.debug_print.isChecked():
+                        print('{0} identical line(s) suppressed.'.format(str(len(context_table) - max_lines)))
+                if self.debug_print.isChecked():
+                    print('List diff_table has now {0} entries.'.format(str(len(diff_table))))
+                    print('List diff_table[:100]={0}'.format(diff_table[:100]))
                 # Replace the marker with the conten of the diff_table
                 tbody = BeautifulSoup('<tbody>' + ' '.join(diff_table).strip() + '</tbody>', 'xml')
                 table_soup.find(text='***put tbody here***').replace_with(tbody)
                 diff = str(table_soup)
-                # print('Manipulating Diff finished, diff[:1000] + diff[-200:]=' + diff[:1000] + '*****' + diff[-200:])
-                self.gui.status_bar.showMessage(_('Manipulating diff result finished.'))
+                if self.debug_print.isChecked():
+                     print('Manipulating Diff finished, diff[:1000] + diff[-200:]=' + diff[:1000] + '*****' + diff[-200:])
+                print(_('Condensing diff result finished.'))
+                self.gui.status_bar.showMessage(_('Condensing diff result finished.'))
 
             # Reformat the table (modernize html) before put into TextBrowser windowindow
 
@@ -1126,8 +1207,9 @@ class TextDiffDialog(QDialog):
         else:
             diff = (_('Unknown compare option!'))
 
-        stop_time = time.perf_counter()
-        # print("Time for calculate diff was: {0:3.4f} seconds".format(stop_time - start_time))
+        if self.debug_print.isChecked():
+            stop_time = time.perf_counter()
+            print('Time for calculate diff was: {0:3.4f} seconds'.format(stop_time - start_time))
 
         return diff, ratio
 
@@ -1140,12 +1222,16 @@ class TextDiffDialog(QDialog):
             if text and not line.endswith(newline):
                 text += newline
         diff = text
-        # print('diff[:1000]={0}'.format(diff[:1000]))
+        if self.debug_print.isChecked():
+            print('diff[:1000]={0}'.format(diff[:1000]))
         return diff
 
     def substitute_chars(self, old_text):
 
-        return old_text
+        if self.debug_print.isChecked():
+            print('Enter substitute_chars()')
+
+        # return old_text
         # The following code works in little strings but with big strings it kills calibre
 
         # Soft Hyphens -> see remove_soft_hyphens()
@@ -1199,6 +1285,47 @@ class TextDiffDialog(QDialog):
         new_text = pattern.sub(lambda m: replacements[re.escape(m.group(0))], str(old_text))
         return new_text
 
+    def try_pdf_format(self, pdf_format_path):
+        # Use the poppler utilities to check if the pdf is readable and contains text (is packed with Calibre)
+        if self.debug_print.isChecked():
+            print('pdf_format_path={0}'.format(pdf_format_path))
+        import subprocess
+        cmd = ['pdftotext', pdf_format_path]
+        try:
+            p = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+            out, err = p.communicate()  # communicate() returns a tuple (stdoutdata, stderrdata).
+            if self.debug_print.isChecked():
+                print('Returncode of subprocess={0}'.format(p.returncode))
+                print('err={0}'.format(err))
+            if p.returncode > 0:
+                if p.returncode == 1:
+                    return 'password_protected'
+                else:
+                    return 'other_error'
+            else:  # check text file size
+                text_format_path = pdf_format_path[:-3] + 'txt'
+                if self.debug_print.isChecked():
+                    print('text_format_path={0}'.format(text_format_path))
+                if os.path.exists(text_format_path) and os.stat(text_format_path).st_size == 1:
+                    os.remove(text_format_path)
+                    return 'no_text'
+                else:
+                    return ''
+        except Exception as err:
+            print(err)
+            return 'other_error'
+
+        # use pypdf (to be bundled)
+        #from pypdf import PdfReader
+        #reader = PdfReader(format_path)
+        #if reader.is_encrypted():
+        #    return 'password_protected'
+        #page = reader.pages[0]
+        #num_pages = pdf_reader.getNumPages()
+        #if num_pages == 0:
+        #    return 'no_text'
+        #return ''
+
     def get_txt_format_path(self, book_format_info):
         # Generate a path for the text file
         # [(285, 'Meister Antifers wunderbare Abenteuer', 'EPUB', 'E:\\Bibliotheken\\Abenteuer\\Jules Verne\\Meister Antifers wunderbare Abenteu (285)\\Meister Antifers wunderbare Abe - Jules Verne.epub'),
@@ -1210,7 +1337,8 @@ class TextDiffDialog(QDialog):
         txt_format_path = '_'.join(txt_format_path.rsplit('.', 1))
         txt_format_path = txt_format_path + '_' + str(book_id)  # Qualify text file name with book_id
         txt_format_path = txt_format_path + '.txt'  # path for converted text format
-        # print('txt_format_path={0}'.format(txt_format_path))
+        if self.debug_print.isChecked():
+            print('txt_format_path={0}'.format(txt_format_path))
         return txt_format_path
 
     def copy_diff_file(self):
@@ -1236,12 +1364,14 @@ class TextDiffDialog(QDialog):
             dialog.setNameFilter(_('Text (*.txt)'))
             options = _('Text (*.txt)')
 
-        # print('file_name={0}'.format(file_name))
-        # print('options={0}'.format(options))
+        if self.debug_print.isChecked():
+            print('file_name={0}'.format(file_name))
+            print('options={0}'.format(options))
         # selectedFilter='',
         # file_path = dialog.getSaveFileName(parent=self.gui, caption=_('Save File'), dir=file_name, options=options)
         file_path = dialog.getSaveFileName(self.gui, _('Save File'), file_name, options)
-        # print('file_path={0}'.format(file_path))
+        if self.debug_print.isChecked():
+            print('file_path={0}'.format(file_path))
         # file_path=('H:/Programmierung/Python/calibre_plugins/TextDiff/diff_file_5429_9166.htnl.html', 'HTML file (*.html)')
         # Handle save file dialog with no user selection
 
@@ -1253,14 +1383,17 @@ class TextDiffDialog(QDialog):
 
     def add_book(self):
 
-        print(_('Enter add_book()...'))
+        if self.debug_print.isChecked():
+            print('Enter add_book()...')
+        print(_('Adding book...'))
         self.gui.status_bar.showMessage(_('Adding book...'))
 
         # https://manual.calibre-ebook.com/de/db_api.html
 
         db = self.gui.current_db.new_api  # Get access to db API
         mi = db.get_metadata(self.book_ids[0])
-        # print('mi={0}'.format(mi))
+        if self.debug_print.isChecked():
+            print('mi={0}'.format(mi))
 
         # mi=Title            : diff_file_11571_5640
         # Title sort          : Alarm in Luna IV
@@ -1281,7 +1414,8 @@ class TextDiffDialog(QDialog):
         mi.title = 'diff_file_' + str(self.book_ids[0]) + '_' + str(self.book_ids[1])
         mi.publisher = 'TextDiff'
         mi.pubdate = mi.timestamp = utcnow()
-        # print('mi={0}'.format(mi))
+        if self.debug_print.isChecked():
+            print('mi={0}'.format(mi))
 
         print(_('Create book...'))
         book_id = db.create_book_entry(mi, add_duplicates=True)
@@ -1303,13 +1437,16 @@ class TextDiffDialog(QDialog):
         #         :param replace: If True replace existing format, otherwise if the format already exists, return False.
         #         :param run_hooks: If True, file type plugins are run on the format before and after being added.
         diff_io = BytesIO(str.encode(self.diff))  # convert a string to a stream object
-        # print('diff_io has type {0}'.format(type(diff_io)))
+        if self.debug_print.isChecked():
+            print('diff_io has type {0}'.format(type(diff_io)))
         rc = db.new_api.add_format(book_id, book_format, diff_io, replace=True, run_hooks=False)
-        # print('rc={0}'.format(rc))
+        if self.debug_print.isChecked():
+            print('rc={0}'.format(rc))
         # with lopen(path, 'rb') as stream:
         # db.new_api.add_format(book_id, book_format, str.encode(self.diff), replace=True, run_hooks=False)
         diff_io.close()
         log('Book saved.')
+        print(_('Book saved.'))
         self.gui.status_bar.showMessage(_('Book saved.'))
         info_dialog(self, _('Save diff to book.'), _('Book with diff content as format added'), show=True)
 

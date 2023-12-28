@@ -7,7 +7,7 @@ import gettext
 from calibre.customize import InterfaceActionBase
 
 __license__ = 'GPL v3'
-__copyright__ = '2022, Michael Detambel <info@michael-detambel.de>'
+__copyright__ = '2022-2023, Michael Detambel <info@michael-detambel.de>'
 __docformat__ = 'restructuredtext en'
 
 # Load translations
@@ -42,27 +42,27 @@ class TextDiffBase(InterfaceActionBase):
     description = _('A Calibre GUI plugin to find text differences in two book formats.')
     platforms = ['windows', 'osx', 'linux']
     minimum_calibre_version = (5, 0, 0)
-    author = 'Michael Detambel, <info@michael-detambel.de>'
+    author = 'Michael Detambel, <info(at)michael-detambel.de>'
     version = (1, 2, 3)
-    released = ('10-12-2023')
+    released = ('12-28-2023')
 
-    # ToDo: Check PDF first on decryption and image only
     # ToDo: Check/convert multiple cols to sequential text
-    # ToDo: If you care about speed use the extract_text() function from calibre.db.fts.text
+    # ToDo: Kovid says: If you care about speed use the extract_text() function from calibre.db.fts.text
 
     # History
-    # Version 1.2.3 - 10-12-2023
-    # - Workaround when calibre hangs in not readable PDFs.
-    # - Substitute quotes and dashes characters with standard characters before diff
+    # Version 1.2.3 - 12-28-2023
+    # - Workaround when calibre hangs in not readable PDF's (encrypted pdf's, pdf's with no text layer).
+    # - Substitute quotes and dashes characters with standard characters before diff (optional).
+    # - Debug print optional.
     # Version 1.2.2 - 06-29-2023
-    # - Disable buttons to save diff result until a result is generated (Thanks to Robert1a)
+    # - Disable buttons to save diff result until a result is generated (Thanks to Robert1a).
     # Version 1.2.1 - 03-23-2023
-    # - Switch between context line processing by plugin or by Difflib
+    # - Switch between context line processing by plugin or by Difflib.
     # Version 1.2.0 - 03-22-2023
     # - Abort compare with message if convert has no result.
     # - Hide identical lines, but with the option to display a number of context lines. Closes enhancement request #1.)
     # Version 1.1.2 - 02-03-2023
-    # - Adding double-quotes for the --sr1-search value, like this: --sr1-search "(?m)^\s*$"
+    # - Adding double-quotes for the --sr1-search value, like this: --sr1-search "(?m)^\s*$".
     #   to avoid "syntax error near unexpected token \`('" on Mac. (Thanks to irinel-dan.)
     # Version 1.1.1 - 11-30-2022
     # - Handle save file dialog with no user path/file choice.

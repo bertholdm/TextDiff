@@ -1,4 +1,4 @@
-[GUI Plugin] TextDiff - Version 1.2.2 - 06-29-2023
+[GUI Plugin] TextDiff - Version 1.2.3 - 12-28-2023
 
 A Calibre GUI plugin for finding text differences in two book formats.
 
@@ -26,7 +26,6 @@ The "Compare"-Dialog is modeless, what permits to move it around and touch the C
 Planned Features:
 -----------------
 - Remove soft hyphens before conversion.
-- Custom characters to ignore ("char junk", e. g. "" vs. »«). 
 
 Limitations:
 ------------
@@ -34,6 +33,10 @@ Limitations:
 
 Version History:
 ----------------
+Version 1.2.3 - 12-28-2023
+- Workaround when calibre hangs in not readable PDF's (encrypted pdf's, pdf's with no text layer).
+- Substitute quotes and dashes characters with standard characters before diff (optional).
+- Debug print optional.
 Version 1.2.2 - 06-29-2023
 - Disable buttons to save diff result until a result is generated (Thanks to Robert1a)
 Version 1.2.1 - 03-23-2023
@@ -63,7 +66,7 @@ If you find any issues or have suggestions, please report them on GitHub or in t
 
 ---
 
-[GUI-Plugin] TextDiff - Version 1.2.2 - 06-29-2023
+[GUI-Plugin] TextDiff - Version 1.2.3 - 12-28-2023
 
 Ein Calibre GUI-Plugin zum Finden von Textunterschieden in zwei Buchformaten.
 
@@ -92,7 +95,6 @@ Der "Vergleichen"-Dialog ist moduslos, was es erlaubt, ihn zu verschieben, und d
 Geplante Funktionen:
 --------------------
 - Weiche Bindestriche vor der Konvertierung entfernen.
-- Benutzerdefinierte Zeichen, die ignoriert werden sollen ("Zeichenmüll", z. B. "" vs. »«).
 
 Einschränkungen:
 ----------------
@@ -100,8 +102,12 @@ Einschränkungen:
 
 Versionsgeschichte:
 -------------------
+Version 1.2.3 - 12-28-2023
+- Vermeidung, dass sich Calibre an PDF-Dateien "aufhängt" (Knnwortgeschützes PDF oder PDF ohne Text (gescanntes PDF).
+- Optional: Ersatz von Zeichen vor dem Vergleich (Anführungszeichen, Bindestriche, ...).
+- Optional: Testausgabe.
 Version 1.2.2 - 06-29-2023
-- Schaltflächen zum Speichern des Vergleichsergebnisses deaktiviert, bis Vergleichsergebnis erstellt wurde (Dank an Robert1a)
+- Schaltflächen zum Speichern des Vergleichsergebnisses deaktiviert, bis Vergleichsergebnis erstellt wurde (Dank an Robert1a).
 Version 1.2.1 - 03-23-2023
 - Wahl zwischen Kontext-Verarbeitung durch Plugin oder Difflib.
 Version 1.2.0 - 03-22-2023
