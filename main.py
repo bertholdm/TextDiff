@@ -675,10 +675,69 @@ class TextDiffDialog(QDialog):
         if len(text_lines) < 2:
             self.text_browser.setPlainText(_('No compare possible, since at least one convert failed.'))
         else:
-            # print("Time for compare() so far: {0:3.4f} seconds".format(time.perf_counter() - overall_start_time))
-            # print('Format conversion finished. Beginning compare...')
+            if self.debug_print.isChecked():
+                print('Time for compare() so far: {0:3.4f} seconds'.format(time.perf_counter() - overall_start_time))
             print(_('Format conversion finished. Beginning compare...'))
-            self.gui.status_bar.showMessage(_('Format conversion finished. Beginning compare...'))
+            self.gui.status_bar.showMessage(_('Format conversion finished.'))
+
+            if self.subst_chars.isChecked():
+                print(_('Building replacement dict...'))
+                self.gui.status_bar.showMessage(_('Building replacement dict...'))
+                # Build the replacing dict
+                # Soft Hyphens -> see remove_soft_hyphens()
+                # std chars are '-', "'", '"'
+                replacements = {
+                    # EN DASH / HYPHEN (U+002D)
+                    '\u1806': '\u002D',  # '᠆'
+                    '\u2010': '\u002D',  # '‐'
+                    '\u2011': '\u002D',  # '‑'
+                    '\u2012': '\u002D',  # '‒'
+                    '\u2013': '\u002D',  # '–'
+                    '\uFE58': '\u002D',  # '﹘'
+                    '\uFE63': '\u002D',  # '﹣'
+                    '\uFF0D': '\u002D',  # '－'
+                    # SINGLE QUOTES (U+0027)
+                    '\u003C': '\u0027',  # '<'
+                    '\u003E': '\u0027',  # '>'
+                    '\u2018': '\u0027',  # '‘'
+                    '\u2019': '\u0027',  # '’'
+                    '\u201A': '\u0027',  # '‚'
+                    '\u201B': '\u0027',  # '‛'
+                    '\u2039': '\u0027',  # '‹'
+                    '\u203A': '\u0027',  # '›'
+                    '\u275B': '\u0027',  # '❛'
+                    '\u275C': '\u0027',  # '❜'
+                    '\u276E': '\u0027',  # '❮'
+                    '\u276F': '\u0027',  # '❯'
+                    '\uFF07': '\u0027',  # '＇'
+                    '\u300C': '\u0027',  # '「'
+                    '\u300D': '\u0027',  # '」'
+                    # DOUBLE QUOTES (U+0022)
+                    '\u00AB': '\u0022',  # '«'
+                    '\u00BB': '\u0022',  # '»'
+                    '\u201C': '\u0022',  # '“'
+                    '\u201D': '\u0022',  # '”'
+                    '\u201E': '\u0022',  # '„'
+                    '\u201F': '\u0022',  # '‟'
+                    '\u275D': '\u0022',  # '❝'
+                    '\u275E': '\u0022',  # '❞'
+                    '\u2E42': '\u0022',  # '⹂'
+                    '\u301D': '\u0022',  # '〝'
+                    '\u301E': '\u0022',  # '〞'
+                    '\u301F': '\u0022',  # '〟'
+                    '\uFF02': '\u0022',  # '＂'
+                    '\u300E': '\u0022',  # '『'
+                    '\u300F': '\u0022',  # '』'
+                }
+                replacements = dict(
+                    (re.escape(k), v) for k, v in replacements.items())  # esape regular expression metacharacters
+                pattern = re.compile("|".join(replacements.keys()))
+                if self.subst_chars.isChecked():
+                    print(_('Building replacement dict finished. Beginning replacing...'))
+                text_lines[0] = self.substitute_chars(text_lines[0], pattern, replacements)
+                text_lines[1] = self.substitute_chars(text_lines[1], pattern, replacements)
+                if self.subst_chars.isChecked():
+                    print(_('Replacing finished. Beginning compare...'))
 
             diff_options = {}
             diff_options['difftype'] = str(
@@ -855,11 +914,9 @@ class TextDiffDialog(QDialog):
                 # from the iterable that it considers to be false.
                 txt_file_content = list(filter(None, (line.rstrip() for line in f)))
 
-                # Substitute quotes and dashes characters with standard chars (optional)
-                txt_file_content = self.substitute_chars(txt_file_content)
-
-            # print('File {0} has {1} lines.'.format(txt_format_path, len(txt_file_content)))
-            # print('The first 10 items are: {0}'.format(txt_file_content[:10]))
+            if self.debug_print.isChecked():
+                print('File {0} has {1} lines.'.format(txt_format_path, len(txt_file_content)))
+                print('The first 10 items are: {0}'.format(txt_file_content[:10]))
         else:
             error_dialog(self.gui, _('TextDiff plugin'),
                          _('The file "{0}" don\'t exist. Probably conversion to text format failed.'.format(
@@ -1226,63 +1283,19 @@ class TextDiffDialog(QDialog):
             print('diff[:1000]={0}'.format(diff[:1000]))
         return diff
 
-    def substitute_chars(self, old_text):
+    def substitute_chars(self, old_text, pattern, replacements):
 
         if self.debug_print.isChecked():
             print('Enter substitute_chars()')
 
-        # return old_text
-        # The following code works in little strings but with big strings it kills calibre
+        # old_text is a list of lines
+        new_text = []
+        # old_text = ''.join(old_text)
+        for line in old_text:
+            new_text.append(pattern.sub(lambda m: replacements[re.escape(m.group(0))], line))
+        if self.debug_print.isChecked():
+            print('new_text[:100]={0}'.format(new_text[:100]))
 
-        # Soft Hyphens -> see remove_soft_hyphens()
-        # std chars are '-', "'", '"'
-        replacements = {
-            # EN DASH / HYPHEN (U+002D)
-            '\u1806': '\u002D',  # '᠆'
-            '\u2010': '\u002D',  # '‐'
-            '\u2011': '\u002D',  # '‑'
-            '\u2012': '\u002D',  # '‒'
-            '\u2013': '\u002D',  # '–'
-            '\uFE58': '\u002D',  # '﹘'
-            '\uFE63': '\u002D',  # '﹣'
-            '\uFF0D': '\u002D',  # '－'
-            # SINGLE QUOTES (U+0027)
-            '\u003C': '\u0027',  # '<'
-            '\u003E': '\u0027',  # '>'
-            '\u2018': '\u0027',  # '‘'
-            '\u2019': '\u0027',  # '’'
-            '\u201A': '\u0027',  # '‚'
-            '\u201B': '\u0027',  # '‛'
-            '\u2039': '\u0027',  # '‹'
-            '\u203A': '\u0027',  # '›'
-            '\u275B': '\u0027',  # '❛'
-            '\u275C': '\u0027',  # '❜'
-            '\u276E': '\u0027',  # '❮'
-            '\u276F': '\u0027',  # '❯'
-            '\uFF07': '\u0027',  # '＇'
-            '\u300C': '\u0027',  # '「'
-            '\u300D': '\u0027',  # '」'
-            # DOUBLE QUOTES (U+0022)
-            '\u00AB': '\u0022',  # '«'
-            '\u00BB': '\u0022',  # '»'
-            '\u201C': '\u0022',  # '“'
-            '\u201D': '\u0022',  # '”'
-            '\u201E': '\u0022',  # '„'
-            '\u201F': '\u0022',  # '‟'
-            '\u275D': '\u0022',  # '❝'
-            '\u275E': '\u0022',  # '❞'
-            '\u2E42': '\u0022',  # '⹂'
-            '\u301D': '\u0022',  # '〝'
-            '\u301E': '\u0022',  # '〞'
-            '\u301F': '\u0022',  # '〟'
-            '\uFF02': '\u0022',  # '＂'
-            '\u300E': '\u0022',  # '『'
-            '\u300F': '\u0022',  # '』'
-        }
-
-        replacements = dict((re.escape(k), v) for k, v in replacements.items())  # esape regular expression metacharacters
-        pattern = re.compile("|".join(replacements.keys()))
-        new_text = pattern.sub(lambda m: replacements[re.escape(m.group(0))], str(old_text))
         return new_text
 
     def try_pdf_format(self, pdf_format_path):

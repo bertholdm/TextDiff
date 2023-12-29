@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Perrypedia\n"
-"POT-Creation-Date: 2023-12-28 15:55+0100\n"
-"PO-Revision-Date: 2023-12-28 15:55+0100\n"
+"POT-Creation-Date: 2023-12-29 12:54+0100\n"
+"PO-Revision-Date: 2023-12-29 13:03+0100\n"
 "Last-Translator: Michael Detambel <info@michael-detambel.de>\n"
 "Language-Team: Michael Detambel, <info@michael-detambel.de>\n"
 "Language: de_DE\n"
@@ -253,11 +253,27 @@ msgstr ""
 "Kein Vergleich möglich, da mindestens ein Konvertierungsvorgang "
 "fehlgeschlagen ist."
 
-#: main.py:680 main.py:681
+#: main.py:680
 msgid "Format conversion finished. Beginning compare..."
 msgstr "Formatumwandlung beendet. Beginne Vergleich..."
 
-#: main.py:712 main.py:733
+#: main.py:681
+msgid "Format conversion finished."
+msgstr "Formatumwandlung beendet."
+
+#: main.py:684 main.py:685
+msgid "Building replacement dict..."
+msgstr "Erstelle die Ersetzungstabelle..."
+
+#: main.py:736
+msgid "Building replacement dict finished. Beginning replacing..."
+msgstr "Erstellung der Ersetzungstabelle beendet. Beginne Ersetzung..."
+
+#: main.py:740
+msgid "Replacing finished. Beginning compare..."
+msgstr "Zeichenersetzung beendet. Beginne Vergleich..."
+
+#: main.py:771 main.py:792
 msgid ""
 "No differences found in text. However, there may be differences in metadata, "
 "formatting or MIME content."
@@ -266,39 +282,39 @@ msgstr ""
 "beiden Dateien in den Metadaten, der Formatierung oder Multimedia-Inhalten "
 "unterscheiden."
 
-#: main.py:716 main.py:717
+#: main.py:775 main.py:776
 msgid "Putting result in text browser window..."
 msgstr "Schaufele das Ergebnis in das Text-Browser-Fenster..."
 
-#: main.py:730
+#: main.py:789
 msgid "No diff result! Please report this."
 msgstr "Kein Vergleichsergebnis! Bitte als Fehler melden."
 
-#: main.py:753
+#: main.py:812
 msgid "Unknown difftype or result:\\n"
 msgstr "Unbekannte Vergleichsoption oder nicht erwartetes Ergebnis:\\n"
 
-#: main.py:760 main.py:761
+#: main.py:819 main.py:820
 msgid "Compare finished."
 msgstr "Vergleich beendet."
 
-#: main.py:793
+#: main.py:852
 msgid "Enter ebook_convert()..."
 msgstr "Beginne ebook_convert()..."
 
-#: main.py:807
+#: main.py:866
 msgid "Starting ebook_convert()..."
 msgstr "Starte ebook_convert()..."
 
-#: main.py:808
+#: main.py:867
 msgid "Starting ebook-convert..."
 msgstr "Beginne Konvertierung zu Text..."
 
-#: main.py:864
+#: main.py:921
 msgid "TextDiff plugin"
 msgstr "TextDiff Plugin"
 
-#: main.py:865
+#: main.py:922
 #, python-brace-format
 msgid ""
 "The file \"{0}\" don't exist. Probably conversion to text format failed."
@@ -306,100 +322,100 @@ msgstr ""
 "Textformat für die Datei {0} wurde nicht gefunden. Wahrscheinlich ist die "
 "Umwandlung fehlgeschlagen."
 
-#: main.py:869 main.py:870
+#: main.py:926 main.py:927
 msgid "Compare aborted."
 msgstr "Vergleich abgebrochen."
 
-#: main.py:878 main.py:879
+#: main.py:935 main.py:936
 msgid "Deleting temp file..."
 msgstr "Lösche temporäre Datei..."
 
-#: main.py:883 main.py:884
+#: main.py:940 main.py:941
 msgid "Finishing ebook_convert()."
 msgstr "Beende ebook_convert()."
 
-#: main.py:915
+#: main.py:972
 msgid "No differences found!"
 msgstr "Keine Unterschiede im Text gefunden!"
 
-#: main.py:940
+#: main.py:997
 msgid "Instantiate HtmlDiff..."
 msgstr "Instanziiere HtmlDiff..."
 
-#: main.py:1014
+#: main.py:1071
 msgid "Calling HtmlDiff.make_table()..."
 msgstr "Starte HtmlDiff.make_table()..."
 
-#: main.py:1042 main.py:1043
+#: main.py:1099 main.py:1100
 msgid "Diff finished. Building final HTML output..."
 msgstr "Diff beendet. Erstelle die endgültige HTML-Ausgabe."
 
-#: main.py:1102 main.py:1103
+#: main.py:1159 main.py:1160
 msgid "Stripping identical lines..."
 msgstr "Unterdrücke übereinstimmende Zeilen..."
 
-#: main.py:1119 main.py:1122 main.py:1147 main.py:1150
+#: main.py:1177 main.py:1181 main.py:1206 main.py:1209
 #, python-brace-format
 msgid "[{0} identical line(s).]"
 msgstr "[{0} identische Zeile(n).]"
 
-#: main.py:1163 main.py:1164
+#: main.py:1222 main.py:1223
 msgid "Condensing diff result finished."
 msgstr "Komprimierung des Diff-Ergebnisses beendet."
 
-#: main.py:1206
+#: main.py:1265
 msgid "Unknown compare option!"
 msgstr "Nicht erwartete Vergleichsoption!"
 
-#: main.py:1349
+#: main.py:1360
 msgid "Enter save_diff_file()..."
 msgstr "Beginne save_diff_file()..."
 
-#: main.py:1358 main.py:1359
+#: main.py:1369 main.py:1370
 msgid "HTML file (*.html)"
 msgstr "HTML-Datei (*.html)"
 
-#: main.py:1362 main.py:1363
+#: main.py:1373 main.py:1374
 msgid "Text (*.txt)"
 msgstr "Text (*.txt)"
 
-#: main.py:1370
+#: main.py:1381
 msgid "Save File"
 msgstr "Datei speichern"
 
-#: main.py:1380
+#: main.py:1391
 msgid "Save to file"
 msgstr "Ergebnis als Datei speichern"
 
-#: main.py:1380
+#: main.py:1391
 msgid "No path/file given."
 msgstr "Kein Ausgabepfad angegeben."
 
-#: main.py:1386 main.py:1387
+#: main.py:1397 main.py:1398
 msgid "Adding book..."
 msgstr "Füge ein Buch hinzu..."
 
-#: main.py:1418
+#: main.py:1429
 msgid "Create book..."
 msgstr "Erstelle Buch..."
 
-#: main.py:1422
+#: main.py:1433
 msgid "Setting cover..."
 msgstr "Erstelle ein Titelbild..."
 
-#: main.py:1430
+#: main.py:1441
 msgid "Adding format..."
 msgstr "Füge ein Format hinzu..."
 
-#: main.py:1447 main.py:1448
+#: main.py:1458 main.py:1459
 msgid "Book saved."
 msgstr "Buch gespeichert."
 
-#: main.py:1449
+#: main.py:1460
 msgid "Save diff to book."
 msgstr "Speichere Vergleichsergebnis als Buch."
 
-#: main.py:1449
+#: main.py:1460
 msgid "Book with diff content as format added"
 msgstr "Buch mit dem Ergebnis des Vergleichs als Format hinzugefügt"
 

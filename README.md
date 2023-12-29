@@ -34,8 +34,8 @@ Limitations:
 Version History:
 ----------------
 Version 1.2.3 - 12-28-2023
-- Workaround when calibre hangs in not readable PDF's (encrypted pdf's, pdf's with no text layer).
-- Substitute quotes and dashes characters with standard characters before diff (optional).
+- Check wether the pdf format is readable ((encrypted pdf's, pdf's with no text layer).
+- Substitute different quotes and dashes characters with standard characters before diff (optional).
 - Debug print optional.
 Version 1.2.2 - 06-29-2023
 - Disable buttons to save diff result until a result is generated (Thanks to Robert1a)
@@ -103,8 +103,8 @@ Einschränkungen:
 Versionsgeschichte:
 -------------------
 Version 1.2.3 - 12-28-2023
-- Vermeidung, dass sich Calibre an PDF-Dateien "aufhängt" (Knnwortgeschützes PDF oder PDF ohne Text (gescanntes PDF).
-- Optional: Ersatz von Zeichen vor dem Vergleich (Anführungszeichen, Bindestriche, ...).
+- Prüfung, ob das PDF-Format lesbar ist (kennwortgeschützt, gescannt).
+- Optional: Ersatz von Zeichen vor dem Vergleich (Anführungszeichen, Striche, ...) durch Standardwerte.
 - Optional: Testausgabe.
 Version 1.2.2 - 06-29-2023
 - Schaltflächen zum Speichern des Vergleichsergebnisses deaktiviert, bis Vergleichsergebnis erstellt wurde (Dank an Robert1a).

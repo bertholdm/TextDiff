@@ -51,8 +51,8 @@ class TextDiffBase(InterfaceActionBase):
 
     # History
     # Version 1.2.3 - 12-28-2023
-    # - Workaround when calibre hangs in not readable PDF's (encrypted pdf's, pdf's with no text layer).
-    # - Substitute quotes and dashes characters with standard characters before diff (optional).
+    # - Check wether the pdf format is readable (encrypted pdf's, pdf's with no text layer).
+    # - Substitute different quotes and dashes characters with standard characters before diff (optional).
     # - Debug print optional.
     # Version 1.2.2 - 06-29-2023
     # - Disable buttons to save diff result until a result is generated (Thanks to Robert1a).
