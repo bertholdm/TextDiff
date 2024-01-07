@@ -43,13 +43,15 @@ class TextDiffBase(InterfaceActionBase):
     platforms = ['windows', 'osx', 'linux']
     minimum_calibre_version = (5, 0, 0)
     author = 'Michael Detambel, <info(at)michael-detambel.de>'
-    version = (1, 2, 3)
-    released = ('12-28-2023')
+    version = (1, 2, 4)
+    released = ('01-07-2024')
 
     # ToDo: Check/convert multiple cols to sequential text
     # ToDo: Kovid says: If you care about speed use the extract_text() function from calibre.db.fts.text
 
     # History
+    # Version 1.2.4 - 01-07-2024
+    # - Fixing an error, introduced in version 1.2.3, when other diff output types than "HTML" are chosen.
     # Version 1.2.3 - 12-28-2023
     # - Check wether the pdf format is readable (encrypted pdf's, pdf's with no text layer).
     # - Substitute different quotes and dashes characters with standard characters before diff (optional).

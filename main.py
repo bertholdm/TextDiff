@@ -13,9 +13,10 @@ from bs4 import BeautifulSoup
 # import html2text
 
 from PyQt5.QtCore import Qt
-from PyQt5.Qt import (QDialog, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QFont, QGridLayout, QSize,
+from PyQt5.Qt import (QDialog, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QGridLayout, QSize,
                       QTextEdit, QComboBox, QCheckBox, QPushButton, QTabWidget, QScrollArea, QMessageBox, QMainWindow,
-                      QApplication, QClipboard, QTextBlock, QTextBrowser, QIntValidator, QFileDialog)
+                      QApplication, QClipboard, QTextBlock, QTextBrowser, QIntValidator, QFileDialog,
+                      QFontDatabase, QFont, QFontInfo)
 # QDocument, QPlainTextEdit,
 
 from calibre.gui2 import gprefs, error_dialog, info_dialog
@@ -77,6 +78,16 @@ class TextDiffDialog(QDialog):
                </tbody>
             </table>"""
 
+        # Test
+        self.table_template = """
+            <table class="diff" id="difflib_chg_%(prefix)s_top"
+                   cellspacing="0" cellpadding="0">
+               %(header_row)s
+               <tbody>
+                    %(data_rows)s
+               </tbody>
+            </table>"""
+
         # <meta http-equiv="Content-Type" content="text/html; charset=%(charset)s" />
         self.file_template = """
         <!DOCTYPE html>
@@ -108,6 +119,25 @@ class TextDiffDialog(QDialog):
         table.diff {
             width: 100%;
             table-layout: fixed;
+            border-spacing: 0;
+            font-family: monospace; 
+            border: none;
+            border-collapse: collapse;
+        }
+        th, td {
+            white-space:nowrap;
+        }
+        .diff_header {background-color:#e0e0e0}
+        td.diff_header {text-align:right}
+        .diff_next {text-align:center; background-color:#c0c0c0}
+        .diff_add {background-color:#aaffaa}
+        .diff_chg {background-color:#ffff77}
+        .diff_sub {background-color:#ffaaaa}
+        """
+
+        # Test
+        self.styles = """
+        table.diff {
             border-spacing: 0;
             font-family: monospace; 
             border: none;
@@ -195,8 +225,10 @@ class TextDiffDialog(QDialog):
         self.fontfamily_label.setAlignment(Qt.AlignRight)
         self.fontfamily_combo = QComboBox()
         self.fontfamily_combo.setObjectName("fontfamily_combo")
-        fontfamilies = ['sans-serif', 'serif', 'monospace', 'system-ui', 'ui-serif', 'ui-sans-serif', 'ui-monospace']
+        fontfamilies = ['sans-serif', 'serif', 'monospace']
         self.fontfamily_combo.addItems(x for x in fontfamilies)
+        self.fontfamily_combo.currentTextChanged.connect(self.on_fontfamily_combo_changed)
+        self.fontfamily_combo.setToolTip('Monospace Font, when not HTML output.')
 
         # The table can be generated in either full or contextual difference mode
         # Only for HtmlDiff! context=True, numlines=10
@@ -369,6 +401,18 @@ class TextDiffDialog(QDialog):
 
         self.refresh_formats()
 
+        # Disable after test.
+        for family in QFontDatabase.families():
+            print('family={0}'.format(family))
+            styles = []
+            for style in QFontDatabase.styles(family):
+                styles.append(style)
+                points = []
+                for point in QFontDatabase.smoothSizes(family, style):
+                    points.append(point)
+            print('styles={0}'.format(styles))  # assume points are identical for all styles
+            print('points={0}'.format(points))
+
     def IS_CHARACTER_JUNK(ch, ws=" \t"):
         r"""
         Return True for ignorable character: iff `ch` is a space or tab.
@@ -392,6 +436,7 @@ class TextDiffDialog(QDialog):
             self.numlines.setEnabled(False)
 
     def on_compare_output_combo_changed(self, value):
+        self.fontfamily_combo.setEnabled(True)
         value = value.upper()
         if value == 'NDIFF':
             self.numlines.setEnabled(False)
@@ -400,6 +445,7 @@ class TextDiffDialog(QDialog):
             self.numlines.setText('3')
         if 'HTMLDIFF' not in value:
             self.fontfamily_combo.setCurrentText('monospace')
+            self.fontfamily_combo.setEnabled(False)
             font = QFont()
             font.setFamily('monospace')
             self.text_browser.setFont(font)
@@ -407,14 +453,39 @@ class TextDiffDialog(QDialog):
             self.context.setChecked(False)
             self.context.setEnabled(False)
         else:
+            self.fontfamily_combo.setEnabled(True)
             font = QFont()
-            font.setFamily(self.fontfamily_combo.CurrentText())
+            font.setFamily(self.fontfamily_combo.currentText())
             self.text_browser.setFont(font)
             self.context.setEnabled(True)
             if self.context_mode.isChecked():
                 self.numlines.setText('1')
             else:
                 self.numlines.setText('5')
+
+    def on_fontfamily_combo_changed(self, value):
+        if self.debug_print.isChecked():
+            print('value={0}'.format(value))
+            print('self.fontfamily_combo.currentText()={0}'.format(self.fontfamily_combo.currentText()))
+        font = QFont()
+        #font.setStyleHint(font.AnyStyle)
+        if value == 'monospace':
+            #font.setStyleHint(font.TypeWriter)
+            font.setFamily('Courier New')  # Windows
+            #font.setFamily('monospace')  # Linux
+        elif value == 'serif':
+            #font.setStyleHint(QFont.Serif)
+            font.setFamily('Times New Roman')  # Windows
+            #font.setFamily('Times')  # Linux
+        elif value == 'sans-serif':
+            #font.setStyleHint(QFont.SansSerif)
+            font.setFamily('Arial')  # Windows
+            #font.setFamily('Helvetica')  # Linux
+        if self.debug_print.isChecked():
+            print('font.defaultFamily()={0}'.format(font.defaultFamily()))
+            print('font.family()={0}'.format(font.family()))  # What is set by the program
+            print('QFontInfo(font)={0}'.format(QFontInfo(font).family()))  # What the environment is able to deliver
+        self.text_browser.setFont(QFontInfo(font).family())
 
     def sizeHint(self):
         # notwendig? (stammt aus single.py)
@@ -426,7 +497,7 @@ class TextDiffDialog(QDialog):
         self.setMinimumWidth(min_width)
         self.setMinimumHeight(min_height)
         # nh, nw = max(300, geom.height() - 400), max(400, geom.width() - 400)
-        nw = max(min_width, geom.width() - min_width - 300)
+        nw = max(min_width, geom.width() - min_width - 240)
         nh = max(min_height, geom.height() - min_height)
         if self.debug_print.isChecked():
             print('nw={0},nh={1}'.format(nw, nh))
@@ -687,7 +758,7 @@ class TextDiffDialog(QDialog):
                 # Soft Hyphens -> see remove_soft_hyphens()
                 # std chars are '-', "'", '"'
                 replacements = {
-                    # EN DASH / HYPHEN (U+002D)
+                    # EN DASH / HYPHEN-MINUS (U+002D)
                     '\u1806': '\u002D',  # '᠆'
                     '\u2010': '\u002D',  # '‐'
                     '\u2011': '\u002D',  # '‑'
@@ -696,7 +767,7 @@ class TextDiffDialog(QDialog):
                     '\uFE58': '\u002D',  # '﹘'
                     '\uFE63': '\u002D',  # '﹣'
                     '\uFF0D': '\u002D',  # '－'
-                    # SINGLE QUOTES (U+0027)
+                    # SINGLE QUOTES (Apostrophe, U+0027)
                     '\u003C': '\u0027',  # '<'
                     '\u003E': '\u0027',  # '>'
                     '\u2018': '\u0027',  # '‘'
@@ -712,7 +783,7 @@ class TextDiffDialog(QDialog):
                     '\uFF07': '\u0027',  # '＇'
                     '\u300C': '\u0027',  # '「'
                     '\u300D': '\u0027',  # '」'
-                    # DOUBLE QUOTES (U+0022)
+                    # DOUBLE QUOTES (QUOTATION MARK, U+0022)
                     '\u00AB': '\u0022',  # '«'
                     '\u00BB': '\u0022',  # '»'
                     '\u201C': '\u0022',  # '“'
@@ -762,7 +833,11 @@ class TextDiffDialog(QDialog):
                 self.ratio.setText(str(ratio))
 
             # Show diff result in GUI
+            if self.debug_print.isChecked():
+                print('Before clear(): self.text_browser.getFontFamily()={0}'.format('xxx'))
             self.text_browser.clear()
+            if self.debug_print.isChecked():
+                print('After clear(): self.text_browser.getFontFamily()={0}'.format('xxx'))
 
             # print("Time for compare() so far: {0:3.4f} seconds".format(time.perf_counter() - overall_start_time))
 
@@ -774,15 +849,6 @@ class TextDiffDialog(QDialog):
 
                 print(_('Putting result in text browser window...'))
                 self.gui.status_bar.showMessage(_('Putting result in text browser window...'))
-
-                if 'HTMLDIFF' not in diff_options['difftype']:
-                    font = QFont()
-                    font.setFamily('monospace')
-                    self.text_browser.setFont(font)
-                else:
-                    font = QFont()
-                    font.setFamily(self.fontfamily_combo.CurrentText())
-                    self.text_browser.setFont(font)
 
                 if self.diff is None:
                     self.text_browser.setPlainText(
@@ -1270,7 +1336,7 @@ class TextDiffDialog(QDialog):
 
         return diff, ratio
 
-    def diff_lines_to_string(selfself, diff):
+    def diff_lines_to_string(self, diff):
         text = ''
         newline = '\n'
         for line in diff:
@@ -1290,10 +1356,10 @@ class TextDiffDialog(QDialog):
 
         # old_text is a list of lines
         new_text = []
-        # old_text = ''.join(old_text)
         for line in old_text:
             new_text.append(pattern.sub(lambda m: replacements[re.escape(m.group(0))], line))
         if self.debug_print.isChecked():
+            print('old_text[:100]={0}'.format(old_text[:100]))  # for test only
             print('new_text[:100]={0}'.format(new_text[:100]))
 
         return new_text
@@ -1372,6 +1438,21 @@ class TextDiffDialog(QDialog):
             # file_name = file_name + '.htnl'
             dialog.setNameFilter(_('HTML file (*.html)'))
             options = _('HTML file (*.html)')
+            # ToDo: Remove cols width restrictions
+            #                <colgroup>
+            #                    <col style="width:2%%">
+            #                    <col style="width:5%%">
+            #                    <col style="width:43%%">
+            #                    <col style="width:2%%">
+            #                    <col style="width:5%%">
+            #                    <col style="width:43%%">
+            #                </colgroup>
+
+            #         table.diff {
+            #             width: 100%;
+            #             table-layout: fixed;
+            #         }
+
         else:
             # file_name = file_name + '.txt'
             dialog.setNameFilter(_('Text (*.txt)'))
