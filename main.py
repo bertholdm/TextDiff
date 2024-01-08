@@ -468,24 +468,24 @@ class TextDiffDialog(QDialog):
             print('value={0}'.format(value))
             print('self.fontfamily_combo.currentText()={0}'.format(self.fontfamily_combo.currentText()))
         font = QFont()
-        #font.setStyleHint(font.AnyStyle)
+        font.setStyleHint(QFont.StyleHint.AnyStyle)
         if value == 'monospace':
-            #font.setStyleHint(font.TypeWriter)
+            font.setStyleHint(QFont.StyleHint.TypeWriter)
             font.setFamily('Courier New')  # Windows
             #font.setFamily('monospace')  # Linux
         elif value == 'serif':
-            #font.setStyleHint(QFont.Serif)
+            font.setStyleHint(QFont.StyleHint.Serif)
             font.setFamily('Times New Roman')  # Windows
             #font.setFamily('Times')  # Linux
         elif value == 'sans-serif':
-            #font.setStyleHint(QFont.SansSerif)
+            font.setStyleHint(QFont.StyleHint.SansSerif)
             font.setFamily('Arial')  # Windows
             #font.setFamily('Helvetica')  # Linux
         if self.debug_print.isChecked():
             print('font.defaultFamily()={0}'.format(font.defaultFamily()))
             print('font.family()={0}'.format(font.family()))  # What is set by the program
             print('QFontInfo(font)={0}'.format(QFontInfo(font).family()))  # What the environment is able to deliver
-        self.text_browser.setFont(QFontInfo(font).family())
+        self.text_browser.setFont(font)
 
     def sizeHint(self):
         # notwendig? (stammt aus single.py)
