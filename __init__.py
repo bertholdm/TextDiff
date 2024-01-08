@@ -51,7 +51,7 @@ class TextDiffBase(InterfaceActionBase):
 
     # History
     # Version 1.2.4 - 01-07-2024
-    # - Fixing an error, introduced in version 1.2.3, when other diff output types than "HTML" are chosen.
+    # - Fixing an typo in version 1.2.3 (leads to an error, when selecting other output types than "HTML"; thanks to Zillion).
     # Version 1.2.3 - 12-28-2023
     # - Check wether the pdf format is readable (encrypted pdf's, pdf's with no text layer).
     # - Substitute different quotes and dashes characters with standard characters before diff (optional).

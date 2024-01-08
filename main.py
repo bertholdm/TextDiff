@@ -197,11 +197,11 @@ class TextDiffDialog(QDialog):
         self.file_info_1.setObjectName('file_info_1')
 
         self.txt_file_content_combo_0 = QComboBox()
-        self.txt_file_content_combo_0.setObjectName("txt_file_content_combo_0")
+        self.txt_file_content_combo_0.setObjectName('txt_file_content_combo_0')
         # self.cb.currentIndexChanged.connect(self.selectionchange)
         # self.input.editingFinished.connect(self.input_changed)
         self.txt_file_content_combo_1 = QComboBox()
-        self.txt_file_content_combo_1.setObjectName("txt_file_content_combo_1")
+        self.txt_file_content_combo_1.setObjectName('txt_file_content_combo_1')
         # self.cb.currentIndexChanged.connect(self.selectionchange)
 
         self.refresh_formats_button = QPushButton(_('Refresh book formats list'), self)
@@ -215,20 +215,23 @@ class TextDiffDialog(QDialog):
         self.compare_output_label = QLabel(_('Display format:'))
         self.compare_output_label.setAlignment(Qt.AlignRight)
         self.compare_output_combo = QComboBox()
-        self.compare_output_combo.setObjectName("compare_output_combo")
+        self.compare_output_combo.setObjectName('compare_output_combo')
         output_formats = ['HTML', 'Context', 'Unified', 'ndiff']
         self.compare_output_combo.addItems(x for x in output_formats)
         self.compare_output_combo.currentTextChanged.connect(self.on_compare_output_combo_changed)
-        self.compare_output_combo.setToolTip('See https://docs.python.org/3/library/difflib.html')
+        self.compare_output_combo.setToolTip(_('See https://docs.python.org/3/library/difflib.html'))
 
         self.fontfamily_label = QLabel(_('Font family for output:'))
         self.fontfamily_label.setAlignment(Qt.AlignRight)
         self.fontfamily_combo = QComboBox()
-        self.fontfamily_combo.setObjectName("fontfamily_combo")
+        self.fontfamily_combo.setObjectName('fontfamily_combo')
+        # self.fontfamily_combo.blockSignals(True)
         fontfamilies = ['sans-serif', 'serif', 'monospace']
         self.fontfamily_combo.addItems(x for x in fontfamilies)
+        # self.fontfamily_combo.setCurrentIndex(-1)  # Force the combo box to fire the default font
+        self.fontfamily_combo.setToolTip(_('Monospace, when not HTML output.'))
         self.fontfamily_combo.currentTextChanged.connect(self.on_fontfamily_combo_changed)
-        self.fontfamily_combo.setToolTip('Monospace Font, when not HTML output.')
+        # self.fontfamily_combo.blockSignals(False)
 
         # The table can be generated in either full or contextual difference mode
         # Only for HtmlDiff! context=True, numlines=10
@@ -289,7 +292,7 @@ class TextDiffDialog(QDialog):
         self.tabsize.setValidator(QIntValidator())
         self.tabsize.setMaxLength(2)
         self.tabsize.setText('4')
-        self.tabsize.setToolTip(_('Specify tab stop spacing.'))
+        self.tabsize.setToolTip(_('Specify tab stop spacing when converting tabs to spaces and viceversa.'))
 
         self.wrapcolumn_label = QLabel(_('Wrap columns at (HtmlDiff):'))
         self.wrapcolumn_label.setAlignment(Qt.AlignRight)
@@ -307,6 +310,11 @@ class TextDiffDialog(QDialog):
         self.text_browser = QTextBrowser()
         self.text_browser.setAcceptRichText(True)
         self.text_browser.setOpenExternalLinks(False)
+        font = QFont()
+        font.setStyleHint(QFont.StyleHint.SansSerif)
+        font.setFamily('Arial')  # Windows
+        # font.setFamily('Helvetica')  # Linux
+        self.text_browser.setFont(font)  # Set default font
 
         # self.text_edit = QPlainTextEdit()
 
@@ -401,17 +409,17 @@ class TextDiffDialog(QDialog):
 
         self.refresh_formats()
 
-        # Disable after test.
-        for family in QFontDatabase.families():
-            print('family={0}'.format(family))
-            styles = []
-            for style in QFontDatabase.styles(family):
-                styles.append(style)
-                points = []
-                for point in QFontDatabase.smoothSizes(family, style):
-                    points.append(point)
-            print('styles={0}'.format(styles))  # assume points are identical for all styles
-            print('points={0}'.format(points))
+        # # Disable after test.
+        # for family in QFontDatabase.families():
+        #     print('family={0}'.format(family))
+        #     styles = []
+        #     for style in QFontDatabase.styles(family):
+        #         styles.append(style)
+        #         points = []
+        #         for point in QFontDatabase.smoothSizes(family, style):
+        #             points.append(point)
+        #     print('styles={0}'.format(styles))  # assume points are identical for all styles
+        #     print('points={0}'.format(points))
 
     def IS_CHARACTER_JUNK(ch, ws=" \t"):
         r"""
@@ -436,43 +444,41 @@ class TextDiffDialog(QDialog):
             self.numlines.setEnabled(False)
 
     def on_compare_output_combo_changed(self, value):
-        self.fontfamily_combo.setEnabled(True)
+        if self.debug_print.isChecked():
+            print('compare_output_combo changed.')
+            print('value={0}'.format(value))
         value = value.upper()
-        if value == 'NDIFF':
-            self.numlines.setEnabled(False)
-        else:
-            self.numlines.setEnabled(True)
-            self.numlines.setText('3')
-        if 'HTMLDIFF' not in value:
-            self.fontfamily_combo.setCurrentText('monospace')
-            self.fontfamily_combo.setEnabled(False)
-            font = QFont()
-            font.setFamily('monospace')
-            self.text_browser.setFont(font)
-            self.context_mode.setChecked(False)
-            self.context.setChecked(False)
-            self.context.setEnabled(False)
-        else:
+        if value == 'HTML':
             self.fontfamily_combo.setEnabled(True)
-            font = QFont()
-            font.setFamily(self.fontfamily_combo.currentText())
-            self.text_browser.setFont(font)
+            self.fontfamily_combo.setCurrentText('sans-serif')
             self.context.setEnabled(True)
             if self.context_mode.isChecked():
                 self.numlines.setText('1')
             else:
                 self.numlines.setText('5')
+        else:
+            self.fontfamily_combo.setCurrentText('monospace')
+            self.fontfamily_combo.setEnabled(False)
+            self.context_mode.setChecked(False)
+            self.context.setChecked(False)
+            self.context.setEnabled(False)
+            if value == 'NDIFF':
+                self.numlines.setEnabled(False)
+            else:
+                self.numlines.setEnabled(True)
+                self.numlines.setText('3')
 
     def on_fontfamily_combo_changed(self, value):
         if self.debug_print.isChecked():
+            print('fontfamily_combo changed.')
             print('value={0}'.format(value))
             print('self.fontfamily_combo.currentText()={0}'.format(self.fontfamily_combo.currentText()))
         font = QFont()
-        font.setStyleHint(QFont.StyleHint.AnyStyle)
+        # font.setStyleHint(QFont.StyleHint.AnyStyle)
         if value == 'monospace':
             font.setStyleHint(QFont.StyleHint.TypeWriter)
             font.setFamily('Courier New')  # Windows
-            #font.setFamily('monospace')  # Linux
+            #font.setFamily('Monospace')  # Linux
         elif value == 'serif':
             font.setStyleHint(QFont.StyleHint.Serif)
             font.setFamily('Times New Roman')  # Windows
@@ -482,9 +488,9 @@ class TextDiffDialog(QDialog):
             font.setFamily('Arial')  # Windows
             #font.setFamily('Helvetica')  # Linux
         if self.debug_print.isChecked():
-            print('font.defaultFamily()={0}'.format(font.defaultFamily()))
             print('font.family()={0}'.format(font.family()))  # What is set by the program
             print('QFontInfo(font)={0}'.format(QFontInfo(font).family()))  # What the environment is able to deliver
+            print('font.defaultFamily()={0}'.format(font.defaultFamily()))  # What the StyleHint produces
         self.text_browser.setFont(font)
 
     def sizeHint(self):
@@ -833,13 +839,10 @@ class TextDiffDialog(QDialog):
                 self.ratio.setText(str(ratio))
 
             # Show diff result in GUI
-            if self.debug_print.isChecked():
-                print('Before clear(): self.text_browser.getFontFamily()={0}'.format('xxx'))
             self.text_browser.clear()
-            if self.debug_print.isChecked():
-                print('After clear(): self.text_browser.getFontFamily()={0}'.format('xxx'))
 
-            # print("Time for compare() so far: {0:3.4f} seconds".format(time.perf_counter() - overall_start_time))
+            if self.debug_print.isChecked():
+                print('Time for compare() so far: {0:3.4f} seconds'.format(time.perf_counter() - overall_start_time))
 
             if ratio == 1.0:
                 self.text_browser.setPlainText(
