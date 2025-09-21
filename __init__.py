@@ -43,15 +43,22 @@ class TextDiffBase(InterfaceActionBase):
     platforms = ['windows', 'osx', 'linux']
     minimum_calibre_version = (5, 0, 0)
     author = 'Michael Detambel, <info(at)michael-detambel.de>'
-    version = (1, 2, 4)
-    released = ('01-07-2024')
+    version = (1, 3, 0)
+    released = ('09-21-2025')
 
     # ToDo: Check/convert multiple cols to sequential text
     # ToDo: Kovid says: If you care about speed use the extract_text() function from calibre.db.fts.text
 
     # History
+    # Version 1.3.0 - 09-21-2025
+    # - Spanish translation (thanks to dunhill)
+    # - removing soft hyphens in input text
+    # Version 1.2.6 - 09-20-2025
+    # - Some more character replacings.
+    # Version 1.2.5 - 04-23-2024
+    # - Explanation for save diff result as book added.
     # Version 1.2.4 - 01-07-2024
-    # - Fixing an typo in version 1.2.3 (leads to an error, when selecting other output types than "HTML"; thanks to Zillion).
+    # - Fixing an typo in version 1.2.3 (causes an error, when selecting other output types than "HTML"; thanks to Zillion_).
     # Version 1.2.3 - 12-28-2023
     # - Check wether the pdf format is readable (encrypted pdf's, pdf's with no text layer).
     # - Substitute different quotes and dashes characters with standard characters before diff (optional).

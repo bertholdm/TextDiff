@@ -1,0 +1,465 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: 2025-09-21 11:50+0200\n"
+"PO-Revision-Date: 2025-09-21 11:55+0200\n"
+"Last-Translator: Michael Detambel <info@michael-detambel.de>\n"
+"Language-Team: \n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.7\n"
+"X-Poedit-Basepath: ..\n"
+"X-Poedit-SearchPath-0: .\n"
+
+#: __init__.py:42
+msgid "A Calibre GUI plugin to find text differences in two book formats."
+msgstr ""
+"Un complemento GUI de Calibre para encontrar diferencias de texto en dos "
+"formatos de libros."
+
+#: config.py:53
+msgid "Config"
+msgstr "Configuración"
+
+#: config.py:96
+msgid "These settings controls the basic features of the plugin. Not used yet!"
+msgstr ""
+"Esta configuración controla las funciones básicas del complemento. ¡Aún no "
+"se usa!"
+
+#: main.py:184
+msgid "1st file (left):"
+msgstr "1er archivo (izquierda):"
+
+#: main.py:186
+msgid "2nd file (right):"
+msgstr "2do archivo (derecha):"
+
+#: main.py:207
+msgid "Refresh book formats list"
+msgstr "Actualizar la lista de formatos de libros"
+
+#: main.py:215
+msgid "Display format:"
+msgstr "Formato de visualización:"
+
+#: main.py:222
+msgid "See "
+msgstr "Ver "
+
+#: main.py:224
+msgid "Font family for output:"
+msgstr "Familia de fuentes para salida:"
+
+#: main.py:232
+msgid "Monospace, when not HTML output."
+msgstr "Monoespaciado, cuando no hay salida HTML."
+
+#: main.py:238
+msgid "Context handling by plugin"
+msgstr "Manejo de contexto por complemento"
+
+#: main.py:239
+msgid ""
+"Check, if context handling is is to be performed by plugin, not by Difflib."
+msgstr ""
+"Verifique si el manejo del contexto debe ser realizado por el complemento, "
+"no por Difflib."
+
+#: main.py:241
+msgid "Suppress identical lines, preserve n context line(s)"
+msgstr "Suprimir líneas idénticas, conservar n línea(s) de contexto"
+
+#: main.py:248
+msgid ""
+"Set context to True when contextual differences are to be shown, else the "
+"default is False to show the full files."
+msgstr ""
+"Establezca el contexto en Verdadero cuando se deban mostrar diferencias "
+"contextuales; de lo contrario, el valor predeterminado es Falso para mostrar "
+"los archivos completos."
+
+#: main.py:255
+msgid "Number of context lines:"
+msgstr "Número de líneas de contexto:"
+
+#: main.py:269
+msgid ""
+"When context is True numlines controls the number of context lines which "
+"surround the difference highlights. When context is False numlines controls "
+"the number of lines which are shown before a difference highlight when using "
+"the “next” hyperlinks (setting to zero would cause the “next” hyperlinks to "
+"place the next difference highlight at the top of the browser without any "
+"leading context)."
+msgstr ""
+"Cuando el contexto es Verdadero, numlines controla el número de líneas de "
+"contexto que rodean los resaltados de diferencia. Cuando el contexto es "
+"Falso, numlines controla el número de líneas que se muestran antes de un "
+"resaltado de diferencia al usar los hipervínculos \"siguiente\" (si se "
+"establece en cero, los hipervínculos \"siguiente\" colocarían el siguiente "
+"resaltado de diferencia en la parte superior del navegador sin contexto "
+"inicial)."
+
+#: main.py:278
+msgid "Debug print"
+msgstr "Impresión de depuración"
+
+#: main.py:279
+msgid "Check to toggle debug print on."
+msgstr "Marque para activar la impresión de depuración."
+
+#: main.py:283
+msgid "Substitute chars"
+msgstr "Caracteres sustitutos"
+
+#: main.py:284
+msgid "Check to Substitute chars (fixed table for now)."
+msgstr "Marcar para sustituir caracteres (tabla fija por ahora)."
+
+#: main.py:287
+msgid "Tabsize (HtmlDiff):"
+msgstr "Tamaño de pestaña (HtmlDiff):"
+
+#: main.py:295
+msgid "Specify tab stop spacing when converting tabs to spaces and viceversa."
+msgstr ""
+"Especifique el espaciado de tabulaciones al convertir tabulaciones en "
+"espacios y viceversa."
+
+#: main.py:297
+msgid "Wrap columns at (HtmlDiff):"
+msgstr "Ajustar columnas en (HtmlDiff):"
+
+#: main.py:305
+msgid ""
+"Specify column number where lines are broken and wrapped. 0 for not to break."
+msgstr ""
+"Especifique el número de columna donde se dividirán y ajustarán las líneas. "
+"0 para no dividir."
+
+#: main.py:307
+msgid "Compare"
+msgstr "Comparar"
+
+#: main.py:321
+msgid "Ratio is:"
+msgstr "Ratio es:"
+
+#: main.py:325
+msgid "A measure of the sequences’ similarity as a float in the range [0, 1]."
+msgstr ""
+"Una medida de la similitud de las secuencias como un flotante en el rango "
+"[0, 1]."
+
+#: main.py:327
+msgid "Copy output to clipboard."
+msgstr "Copiar salida al portapapeles."
+
+#: main.py:330
+msgid "Save output to file"
+msgstr "Guardar la salida en un archivo"
+
+#: main.py:333
+msgid "Save output as book"
+msgstr "Guardar la salida como libro"
+
+#: main.py:401
+msgid "TextDiff Plugin"
+msgstr "TextDiff Plugin"
+
+#: main.py:532 main.py:545 main.py:563
+msgid "TextDiff error"
+msgstr "Error de diferencia de texto"
+
+#: main.py:533
+msgid "One or two books (with at least total two formats) must be marked."
+msgstr ""
+"Se deben calificar uno o dos libros (con al menos dos formatos en total)."
+
+#: main.py:544
+#, python-brace-format
+msgid "Book {0} has no formats!"
+msgstr "¡El libro {0} no tiene formatos!"
+
+#: main.py:562
+msgid "Book has no formats!"
+msgstr "¡El libro no tiene formatos!"
+
+#: main.py:612 main.py:613
+msgid "Starting compare..."
+msgstr "Empezando la comparación..."
+
+#: main.py:622
+msgid "No books selected"
+msgstr "No hay libros seleccionados"
+
+#: main.py:623
+msgid ""
+"You must select one book with more than one format or two books to perform "
+"this action."
+msgstr ""
+"Debe seleccionar un libro con más de un formato o dos libros para realizar "
+"esta acción."
+
+#: main.py:626
+msgid "Too much books selected"
+msgstr "Demasiados libros seleccionados"
+
+#: main.py:627
+msgid ""
+"You must select one book with more than one format or two books with at "
+"least two formats in sum to perform this action."
+msgstr ""
+"Debes seleccionar un libro con más de un formato o dos libros con al menos "
+"dos formatos en total para realizar esta acción."
+
+#: main.py:678
+msgid "Not enough formats to compare"
+msgstr "No hay suficientes formatos para comparar"
+
+#: main.py:679
+msgid "The selected book(s) must have at least two formats in sum to compare."
+msgstr ""
+"La selección de  libro(s) debe tener al menos dos formatos en suma para "
+"poder comparar."
+
+#: main.py:701
+#, python-brace-format
+msgid ""
+"Could not open pdf format of book no. {0} ({1}). Probably password "
+"protected. Abort."
+msgstr ""
+"No se pudo abrir el PDF del libro n.° {0} ({1}). Probablemente esté "
+"protegido con contraseña. Cancelar."
+
+#: main.py:704
+#, python-brace-format
+msgid ""
+"PDF format of book no. {0} ({1}) contains no text (pdf from image). Abort."
+msgstr ""
+"El formato PDF del libro n.° {0} ({1}) no contiene texto (PDF de la imagen). "
+"Cancelar."
+
+#: main.py:707
+#, python-brace-format
+msgid "Other error in pdf format of book no. {0} ({1}). Abort."
+msgstr "Otro error en el formato PDF del libro n.º {0} ({1}). Cancelar."
+
+#: main.py:711
+msgid "Error in pdf format"
+msgstr "Error en formato pdf"
+
+#: main.py:733 main.py:734
+msgid "Starting convert..."
+msgstr "Iniciando converción..."
+
+#: main.py:750 main.py:751
+msgid "Convert finished."
+msgstr "Conversión terminada."
+
+#: main.py:753
+msgid "No compare possible, since at least one convert failed."
+msgstr ""
+"No es posible hacer ninguna comparación porque al menos una conversión falló."
+
+#: main.py:757
+msgid "Format conversion finished. Beginning compare..."
+msgstr "Conversión de formato finalizada. Iniciando comparación..."
+
+#: main.py:758
+msgid "Format conversion finished."
+msgstr "Conversión de formato finalizada. Iniciando comparación..."
+
+#: main.py:761 main.py:762
+msgid "Building replacement dict..."
+msgstr "Construyendo diccionario de reemplazo…"
+
+#: main.py:820
+msgid "Building replacement dict finished. Beginning replacing..."
+msgstr "Diccionario de sustituciones generado. Iniciando proceso de reemplazo…"
+
+#: main.py:824
+msgid "Replacing finished. Beginning compare..."
+msgstr "Proceso de reemplazo concluido. Iniciando comparación…"
+
+#: main.py:856 main.py:868
+msgid ""
+"No differences found in text. However, there may be differences in metadata, "
+"formatting or MIME content."
+msgstr ""
+"No se encontraron diferencias en el texto. Sin embargo, podría haber "
+"diferencias en los metadatos, el formato o el contenido MIME."
+
+#: main.py:860 main.py:861
+msgid "Putting result in text browser window..."
+msgstr "Colocando el resultado en la ventana del navegador de texto..."
+
+#: main.py:865
+msgid "No diff result! Please report this."
+msgstr "¡No hay resultados! Por favor, reportarlo."
+
+#: main.py:888
+msgid "Unknown difftype or result:\\n"
+msgstr "Diferencia o resultado desconocido:\\n"
+
+#: main.py:895 main.py:896
+msgid "Compare finished."
+msgstr "Comparación terminada."
+
+#: main.py:928
+msgid "Enter ebook_convert()..."
+msgstr "Introduzca ebook_convert()..."
+
+#: main.py:940
+msgid "Starting ebook_convert()..."
+msgstr "Iniciando ebook_convert()..."
+
+#: main.py:941
+msgid "Starting ebook-convert..."
+msgstr "Iniciando conversión a libros electrónicos..."
+
+#: main.py:995
+msgid "TextDiff plugin"
+msgstr "TextDiff plugin"
+
+#: main.py:996
+#, python-brace-format
+msgid ""
+"The file \"{0}\" don't exist. Probably conversion to text format failed."
+msgstr ""
+"El archivo {0} no existe. Probablemente falló la conversión al formato de "
+"texto."
+
+#: main.py:1000 main.py:1001
+msgid "Compare aborted."
+msgstr "Comparación abortada."
+
+#: main.py:1009 main.py:1010
+msgid "Deleting temp file..."
+msgstr "Eliminando archivo temporal..."
+
+#: main.py:1014 main.py:1015
+msgid "Finishing ebook_convert()."
+msgstr "Finalizando ebook_convert()."
+
+#: main.py:1049
+msgid "No differences found!"
+msgstr "¡No se encontraron diferencias!"
+
+#: main.py:1074
+msgid "Instantiate HtmlDiff..."
+msgstr "Inicializando HtmlDiff..."
+
+#: main.py:1148
+msgid "Calling HtmlDiff.make_table()..."
+msgstr "Llamando a HtmlDiff.make_table()..."
+
+#: main.py:1176 main.py:1177
+msgid "Diff finished. Building final HTML output..."
+msgstr "Diferencia terminada. Generando la salida HTML final..."
+
+#: main.py:1236 main.py:1237
+msgid "Stripping identical lines..."
+msgstr "Despojando líneas idénticas..."
+
+#: main.py:1254 main.py:1258 main.py:1283 main.py:1286
+#, python-brace-format
+msgid "[{0} identical line(s).]"
+msgstr "[{0} línea(s) idéntica(s).]"
+
+#: main.py:1299 main.py:1300
+msgid "Condensing diff result finished."
+msgstr "Resultado diferencial de condensación finalizado."
+
+#: main.py:1342
+msgid "Unknown compare option!"
+msgstr "¡Opción de comparación desconocida!"
+
+#: main.py:1441
+msgid "Enter save_diff_file()..."
+msgstr "Introduzca save_diff_file()..."
+
+#: main.py:1450 main.py:1451
+msgid "HTML file (*.html)"
+msgstr "Archivo HTML (*.html)"
+
+#: main.py:1469 main.py:1470
+msgid "Text (*.txt)"
+msgstr "Texto (*.txt)"
+
+#: main.py:1477
+msgid "Save File"
+msgstr "Guardar archivo"
+
+#: main.py:1487
+msgid "Save to file"
+msgstr "Guardar en archivo"
+
+#: main.py:1487
+msgid "No path/file given."
+msgstr "No se ha indicado ninguna ruta/archivo."
+
+#: main.py:1493 main.py:1494
+msgid "Adding book..."
+msgstr "Añadiendo libro..."
+
+#: main.py:1525
+msgid "Create book..."
+msgstr "Crear libro..."
+
+#: main.py:1529
+msgid "Setting cover..."
+msgstr "Configuración de portada..."
+
+#: main.py:1537
+msgid "Adding format..."
+msgstr "Añadiendo formato..."
+
+#: main.py:1554
+#, python-brace-format
+msgid "Book {0} saved. Visible after Calibre restart."
+msgstr "Libro {0} guardado. Visible tras reiniciar Calibre."
+
+#: main.py:1555
+msgid "Book saved. Visible after Calibre restart."
+msgstr "Libro guardado. Visible tras reiniciar Calibre."
+
+#: main.py:1556
+msgid "Save diff to book."
+msgstr "Guardar diferencia en el libro."
+
+#: main.py:1556
+msgid "Book with diff content as format added"
+msgstr "Libro con contenido diferente como formato añadido"
+
+#: ui.py:29
+msgid "TextDiff"
+msgstr "Diferencia de texto"
+
+#: ui.py:29
+msgid "Run the TextDiff Plugin."
+msgstr "Ejecute el complemento TextDiff."
+
+#: ui.py:75
+msgid "Compare..."
+msgstr "Comparar..."
+
+#: ui.py:76
+msgid "Settings..."
+msgstr "Ajustes..."
+
+#: ui.py:77
+msgid "About..."
+msgstr "Acerca de..."
+
+#: ui.py:78
+msgid "Help..."
+msgstr "Ayuda..."
+
+#~ msgid "See https://docs.python.org/3/library/difflib.html"
+#~ msgstr "Consulte https://docs.python.org/3/library/difflib.html"
+
+#~ msgid "Book saved."
+#~ msgstr "Libro guardado."

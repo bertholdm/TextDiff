@@ -219,7 +219,7 @@ class TextDiffDialog(QDialog):
         output_formats = ['HTML', 'Context', 'Unified', 'ndiff']
         self.compare_output_combo.addItems(x for x in output_formats)
         self.compare_output_combo.currentTextChanged.connect(self.on_compare_output_combo_changed)
-        self.compare_output_combo.setToolTip(_('See https://docs.python.org/3/library/difflib.html'))
+        self.compare_output_combo.setToolTip(_('See ') + 'https://docs.python.org/3/library/difflib.html')
 
         self.fontfamily_label = QLabel(_('Font family for output:'))
         self.fontfamily_label.setAlignment(Qt.AlignRight)
@@ -805,6 +805,13 @@ class TextDiffDialog(QDialog):
                     '\uFF02': '\u0022',  # '＂'
                     '\u300E': '\u0022',  # '『'
                     '\u300F': '\u0022',  # '』'
+                    '\u809C': '\u0022',  # '“'
+                    '\u809E': '\u0022',  # '„'
+                    '\uC2AB': '\u0022',  # '«'
+                    '\uC2BB': '\u0022',  # '»'
+                    # ß / ss
+                    '\u00DF': '\u0073\u0073',
+
                 }
                 replacements = dict(
                     (re.escape(k), v) for k, v in replacements.items())  # esape regular expression metacharacters
@@ -891,15 +898,15 @@ class TextDiffDialog(QDialog):
         # self.hide_progressbar()
 
         overall_stop_time = time.perf_counter()
-        # print("Time for compare was total: {0:3.4f} seconds".format(overall_stop_time - overall_start_time))
+        if self.debug_print.isChecked():
+            print("Time for compare was total: {0:3.4f} seconds".format(overall_stop_time - overall_start_time))
 
-    def remove_soft_hyphens(self, input_file, output_file, options):
-        # ToDo: Remove soft hyphens
-        # ebook-polish [options] input_file [output_file]
-        # --remove-soft-hyphens
+    def remove_soft_hyphens(self, text):
+        # Remove soft hyphens
+        # ebook-polish [options] input_file [output_file] --remove-soft-hyphens
         # or
         # use "polish ebooks" plugin
-        pass
+        return [token.replace('\xc2\xad', '') for token in text]  # input is a list
 
     def ebook_convert(self, book_format_info, convert_options):
         # Convert the input format to text format, even if format is already TXT to apply convert options
@@ -921,6 +928,7 @@ class TextDiffDialog(QDialog):
         print(_('Enter ebook_convert()...'))
         if self.debug_print.isChecked():
             print('book_format_info={0}'.format(book_format_info))
+            print('Starting timer...')
             start_time = time.perf_counter()
 
         # Generate a path for the text file
@@ -928,9 +936,6 @@ class TextDiffDialog(QDialog):
         if self.debug_print.isChecked():
             print('txt_format_path={0}'.format(txt_format_path))
             print('Time for ebook_convert so far: {0:3.4f} seconds'.format(time.perf_counter() - start_time))
-
-        # ToDo: Remove soft hyphens in input file?
-        # self.remove_soft_hyphens(input_file, output_file, options)
 
         print(_('Starting ebook_convert()...'))
         self.gui.status_bar.showMessage(_('Starting ebook-convert...'))
@@ -1011,7 +1016,10 @@ class TextDiffDialog(QDialog):
         if self.debug_print.isChecked():
             print('Time for ebook_convert so far: {0:3.4f} seconds'.format(time.perf_counter() - start_time))
 
-        return txt_file_content
+        # Remove soft hyphens in input text
+        return self.remove_soft_hyphens(txt_file_content)
+
+        # return txt_file_content
 
     def create_diff(self, text_lines, book_formats_info, diff_options):
 
@@ -1542,9 +1550,9 @@ class TextDiffDialog(QDialog):
         # with lopen(path, 'rb') as stream:
         # db.new_api.add_format(book_id, book_format, str.encode(self.diff), replace=True, run_hooks=False)
         diff_io.close()
-        log('Book saved.')
-        print(_('Book saved.'))
-        self.gui.status_bar.showMessage(_('Book saved.'))
+        log('Book {0} saved. Visible after Calibre restart.'.format(mi.title))
+        print(_('Book {0} saved. Visible after Calibre restart.'.format(mi.title)))
+        self.gui.status_bar.showMessage(_('Book saved. Visible after Calibre restart.'))
         info_dialog(self, _('Save diff to book.'), _('Book with diff content as format added'), show=True)
 
     def config(self):
