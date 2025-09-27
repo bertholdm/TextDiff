@@ -43,13 +43,16 @@ class TextDiffBase(InterfaceActionBase):
     platforms = ['windows', 'osx', 'linux']
     minimum_calibre_version = (5, 0, 0)
     author = 'Michael Detambel, <info(at)michael-detambel.de>'
-    version = (1, 3, 0)
-    released = ('09-21-2025')
+    version = (1, 3, 1)
+    released = ('09-27-2025')
 
     # ToDo: Check/convert multiple cols to sequential text
     # ToDo: Kovid says: If you care about speed use the extract_text() function from calibre.db.fts.text
 
     # History
+    # Version 1.3.1 - 09-27-2025
+    # - Polish translation (thanks to bravosx)
+    # - Some more character replacings: Three consecutive periods to three dot leader (HORIZONTAL ELLIPSIS).
     # Version 1.3.0 - 09-21-2025
     # - Spanish translation (thanks to dunhill)
     # - removing soft hyphens in input text

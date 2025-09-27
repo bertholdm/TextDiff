@@ -764,8 +764,7 @@ class TextDiffDialog(QDialog):
                 # Soft Hyphens -> see remove_soft_hyphens()
                 # std chars are '-', "'", '"'
                 replacements = {
-                    # EN DASH / HYPHEN-MINUS (U+002D)
-                    '\u1806': '\u002D',  # '᠆'
+                    # Figure Dash / EN DASH / EM DASH / Horizontal Bar -> hyphen, dash, minus sign (U+002D)
                     '\u2010': '\u002D',  # '‐'
                     '\u2011': '\u002D',  # '‑'
                     '\u2012': '\u002D',  # '‒'
@@ -811,6 +810,8 @@ class TextDiffDialog(QDialog):
                     '\uC2BB': '\u0022',  # '»'
                     # ß / ss
                     '\u00DF': '\u0073\u0073',
+                    # FULL STOP / Three consecutive periods (period, dot, decimal point) -> HORIZONTAL ELLIPSIS (three dot leader)
+                    '\u002E\u002E\u002E': '\u2026',
 
                 }
                 replacements = dict(

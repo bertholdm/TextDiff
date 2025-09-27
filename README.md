@@ -1,4 +1,4 @@
-[GUI Plugin] TextDiff - Version 1.3.0 - 09-21-2025
+[GUI Plugin] TextDiff - Version 1.3.1 - 09-27-2025
 
 A Calibre GUI plugin for finding text differences in two book formats.
 
@@ -29,6 +29,9 @@ Limitations:
 
 Version History:
 ----------------
+Version 1.3.1 - 09-27-2025
+- Polish translation (thanks to bravosx)
+- Some more character replacings: Three consecutive periods to three dot leader (HORIZONTAL ELLIPSIS).
 Version 1.3.0 - 09-21-2025
 - Spanish translation (thanks to dunhill)
 - removing soft hyphens in input text
